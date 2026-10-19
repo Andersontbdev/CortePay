@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=DM+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="login">
+<div class="pole" aria-hidden="true"></div>
+<main class="card login-card">
+  <h1>Entrar</h1>
+  <p class="sub" style="margin-bottom:16px">Acesse o painel da sua barbearia.</p>
+  <form id="f">
+    <label class="lab" for="email">E-mail</label>
+    <input id="email" class="f" type="email" autocomplete="username" required>
+    <label class="lab" for="senha">Senha</label>
+    <input id="senha" class="f" type="password" autocomplete="current-password" required>
+    <p class="err" id="err" role="alert"></p>
+    <button class="btn" style="width:100%">Entrar</button>
+  </form>
+</main>
+<script src="/js/api.js"></script>
+<script>
+$('#f').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('#err').textContent = '';
+  try {
+    const r = await api('POST', '/api/login', {email: $('#email').value.trim(), senha: $('#senha').value}, true);
+    location.href = r && r.papel === 'ADMIN' ? '/admin.html' : '/app.html';
+  } catch (x) {
+    $('#err').textContent = x.status === 401 ? 'E-mail ou senha incorretos.' : x.message;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da barbearia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=DM+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="pole" aria-hidden="true"></div>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <img id="logo" alt="Logotipo" hidden><span id="ini" class="ini" aria-hidden="true"></span>
+    <div><h1 id="bn"></h1><p class="sub" id="sub"></p></div>
+  </div>
+  <div class="seg" id="per" role="group" aria-label="Período">
+    <button aria-pressed="false" data-p="hoje">Hoje</button>
+    <button aria-pressed="true" data-p="semana">Semana</button>
+    <button aria-pressed="false" data-p="mes">Mês</button>
+  </div>
+  <div class="acts">
+    <button class="btn sec sm" id="cfg" type="button">Configurar</button>
+    <button class="btn sec sm" id="sair" type="button">Sair</button>
+  </div>
+</header>
+<div class="ban" id="ban" hidden></div>
+<nav class="tabs" id="tabs" aria-label="Seções">
+  <button data-t="painel" aria-pressed="true">Painel</button>
+  <button data-t="agenda" id="tab-ag" aria-pressed="false" hidden>Agenda</button>
+  <button data-t="servicos" aria-pressed="false">Serviços</button>
+  <button data-t="gastos" aria-pressed="false">Gastos</button>
+</nav>
+
+<main>
+<section id="v-painel" class="grid">
+  <section class="card hero gate" aria-label="Lucro">
+    <p class="lab">Lucro</p><p class="num big ok" id="luc">-</p>
+    <div class="mini">
+      <div><p class="lab">Entrou</p><p class="num" id="in">-</p></div>
+      <div><p class="lab">Gastos</p><p class="num" id="out">-</p></div>
+      <div><p class="lab">Atendimentos</p><p class="num" id="qt">-</p></div>
+    </div>
+    <div class="bars" id="bars" role="img" aria-label="Entradas por período"></div><div class="ticks" id="ticks"></div>
+  </section>
+  <section class="card k gate" aria-label="Formas de pagamento"><h2>Como pagaram</h2><div id="pag"></div></section>
+  <section class="card half"><h2>Clientes mais frequentes</h2><div id="rank"></div></section>
+  <section class="card half gate" aria-label="Últimos atendimentos"><h2>Últimos atendimentos</h2><div id="ult"></div></section>
+  <section class="card hero gate" aria-label="Ranking de gastos"><h2>Para onde foi o dinheiro</h2><div id="gst"></div></section>
+  <section class="card k gate" aria-label="Indicadores"><h2>Indicadores</h2><div id="kpi"></div></section>
+  <section class="card full">
+    <h2>Clientes para chamar</h2>
+    <p class="sub" style="margin:-8px 0 12px">Clientes que estão demorando mais do que o normal para voltar.</p>
+    <label class="lab" for="promo">Promoção (você define na hora)</label>
+    <input id="promo" class="f" type="text" placeholder="Ex.: 10% de desconto no corte">
+    <label class="lab" for="tpl">Mensagem ({nome}: cliente, {barbearia}: sua barbearia, {promocao}: a promoção acima)</label>
+    <textarea id="tpl" class="f" rows="2">Oi, {nome}! Sentimos sua falta aqui na {barbearia}. Esta semana tem {promocao} para você. Vamos marcar?</textarea>
+    <div id="chm"></div>
+  </section>
+  <section class="card full gate" aria-label="Resultado das mensagens">
+    <h2>A função de chamar está funcionando?</h2>
+    <div class="mini" id="rs"></div><p id="vd" style="margin:0 0 16px"></p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px">
+      <div><h2 style="font-size:15px">Qual promoção funcionou melhor</h2><div id="pm"></div></div>
+      <div><h2 style="font-size:15px">Últimas mensagens</h2><div id="ms"></div></div>
+    </div>
+  </section>
+</section>
+
+<section id="v-agenda" hidden>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div class="acts"><button class="btn sec sm" id="dia-ant" aria-label="Dia anterior">&lt;</button>
+        <input id="dia" type="date" class="f" style="width:auto;margin:0">
+        <button class="btn sec sm" id="dia-prox" aria-label="Próximo dia">&gt;</button></div>
+      <button class="btn sm" id="novo-ag">Novo horário</button>
+    </div>
+    <div id="ag"></div>
+  </div>
+</section>
+
+<section id="v-servicos" hidden>
+  <div class="card">
+    <h2>Serviços e preços</h2>
+    <form id="fSv" class="cols">
+      <input class="f" id="sv-n" placeholder="Nome do serviço" required aria-label="Nome do serviço">
+      <input class="f" id="sv-p" type="number" min="0.01" step="0.01" placeholder="Preço (R$)" required aria-label="Preço">
+      <input class="f" id="sv-d" type="number" min="5" step="5" value="30" aria-label="Duração em minutos">
+      <button class="btn">Adicionar</button>
+    </form>
+    <p class="lab" style="margin-bottom:12px">A duração (em minutos) é usada na agenda. Reajustar o preço vale só para os próximos atendimentos.</p>
+    <div id="sv"></div>
+  </div>
+</section>
+
+<section id="v-gastos" hidden>
+  <div class="card">
+    <h2>Lançar gasto</h2>
+    <form id="fGs" class="cols">
+      <input class="f" id="gs-d" placeholder="Descrição" required aria-label="Descrição">
+      <select class="f" id="gs-c" aria-label="Categoria"></select>
+      <input class="f" id="gs-v" type="number" min="0.01" step="0.01" placeholder="Valor (R$)" required aria-label="Valor">
+      <input class="f" id="gs-dt" type="date" aria-label="Data">
+      <button class="btn">Salvar gasto</button>
+    </form>
+    <div id="gs" class="gate"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<button class="fab" id="novo" type="button">Novo atendimento</button>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<dialog id="dAt"><h2>Novo atendimento</h2>
+<form id="fAt">
+  <label class="lab" for="at-n">Cliente</label><input id="at-n" class="f" required>
+  <label class="lab" for="at-t">Telefone (com DDD)</label><input id="at-t" class="f" type="tel" placeholder="(11) 91234-5678" required>
+  <label class="lab" for="at-s">Serviço</label><select id="at-s" class="f"></select>
+  <label class="lab" for="at-f">Pagamento</label><select id="at-f" class="f"></select>
+  <label class="lab" for="at-d">Desconto (R$)</label><input id="at-d" class="f" type="number" min="0" step="0.01" value="0">
+  <div class="kp"><span class="lab">Total a cobrar</span><span class="num" id="at-tot">R$ 0,00</span></div>
+  <p class="err" id="at-err" role="alert"></p>
+  <div class="acts"><button class="btn">Salvar atendimento</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dAg"><h2>Novo horário</h2>
+<form id="fAg">
+  <label class="lab" for="ag-n">Cliente</label><input id="ag-n" class="f" required>
+  <label class="lab" for="ag-t">Telefone (com DDD)</label><input id="ag-t" class="f" type="tel" required>
+  <label class="lab" for="ag-s">Serviço</label><select id="ag-s" class="f"></select>
+  <label class="lab" for="ag-dt">Dia</label><input id="ag-dt" class="f" type="date" required>
+  <label class="lab" for="ag-h">Horários livres</label><select id="ag-h" class="f"></select>
+  <p class="err" id="ag-err" role="alert"></p>
+  <div class="acts"><button class="btn">Marcar horário</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dCon"><h2>Concluir atendimento</h2>
+<form id="fCon">
+  <label class="lab" for="co-f">Pagamento</label><select id="co-f" class="f"></select>
+  <label class="lab" for="co-d">Desconto (R$)</label><input id="co-d" class="f" type="number" min="0" step="0.01" value="0">
+  <p class="err" id="co-err" role="alert"></p>
+  <div class="acts"><button class="btn">Concluir</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dCfg"><h2>Configurar barbearia</h2>
+<form id="fCfg">
+  <label class="lab" for="cf-n">Nome da barbearia</label><input id="cf-n" class="f" required>
+  <label class="lab" for="cf-l">Logotipo (imagem PNG ou JPG)</label><input id="cf-l" class="f" type="file" accept="image/*">
+  <label style="display:flex;gap:8px;align-items:center;margin:0 0 12px"><input id="cf-a" type="checkbox"> Trabalho com agendamento de horários</label>
+  <div class="cols"><div><label class="lab" for="cf-ab">Abre</label><input id="cf-ab" class="f" type="time"></div>
+  <div><label class="lab" for="cf-fe">Fecha</label><input id="cf-fe" class="f" type="time"></div></div>
+  <p class="err" id="cf-err" role="alert"></p>
+  <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

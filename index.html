@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Carregando</title></head>
+<body>
+<script>
+// Leva cada pessoa para a tela certa: barbearia, administrador ou login.
+fetch('/api/barbearia', {credentials: 'same-origin'}).then(r => {
+  location.replace(r.status === 200 ? '/app.html' : r.status === 403 ? '/admin.html' : '/login.html');
+}).catch(() => location.replace('/login.html'));
+</script>
+</body></html>
