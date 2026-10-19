@@ -1,0 +1,5 @@
+target/
+dados/
+*.log
+.idea/
+.env
