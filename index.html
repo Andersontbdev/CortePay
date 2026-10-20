@@ -1,10 +1,27 @@
-<!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>Carregando</title></head>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Barbearia</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <script type="module" src="js/login.js"></script>
+</head>
 <body>
-<script>
-// Leva cada pessoa para a tela certa: barbearia, administrador ou login.
-fetch('/api/barbearia', {credentials: 'same-origin'}).then(r => {
-  location.replace(r.status === 200 ? '/app.html' : r.status === 403 ? '/admin.html' : '/login.html');
-}).catch(() => location.replace('/login.html'));
-</script>
-</body></html>
+  <div class="tela-login">
+    <form id="form-login" class="cartao" novalidate>
+      <div class="marca"><span class="logo">✂</span><strong>Barbearia</strong></div>
+      <h2>Entrar</h2>
+      <label>E-mail
+        <input type="email" name="email" autocomplete="username" required>
+      </label>
+      <label>Senha
+        <input type="password" name="senha" autocomplete="current-password" required>
+      </label>
+      <p class="erro-login" id="erro-login" role="alert"></p>
+      <button class="btn primario" type="submit">Entrar</button>
+      <p class="nota">Esqueceu a senha? Fale com o administrador do sistema.</p>
+    </form>
+  </div>
+</body>
+</html>

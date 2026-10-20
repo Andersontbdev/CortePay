@@ -1,66 +1,143 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Administração</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=DM+Sans:wght@400;500&display=swap">
-<link rel="stylesheet" href="/css/app.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administração · Barbearia</title>
+  <link rel="stylesheet" href="css/estilo.css">
+  <script type="module" src="js/admin.js"></script>
 </head>
 <body>
-<div class="pole" aria-hidden="true"></div>
-<div class="wrap">
-<header>
-  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias</p></div>
-  <div class="acts">
-    <button class="btn sm" id="nova" type="button">Nova barbearia</button>
-    <button class="btn sec sm" id="sair" type="button">Sair</button>
-  </div>
-</header>
+  <header class="topo">
+    <div class="marca"><span class="logo">✂</span><strong>Administração</strong></div>
+    <button class="btn-link" id="btn-sair" type="button">Sair</button>
+  </header>
 
-<div class="grid" style="margin-bottom:14px">
-  <section class="card q"><p class="lab">Em dia</p><p class="num" style="font-size:28px" id="m-o">-</p></section>
-  <section class="card q"><p class="lab">Vencem em breve</p><p class="num" style="font-size:28px" id="m-p">-</p></section>
-  <section class="card q"><p class="lab">Atrasadas</p><p class="num" style="font-size:28px" id="m-a">-</p></section>
-  <section class="card q"><p class="lab">Modo restrito</p><p class="num" style="font-size:28px" id="m-s">-</p></section>
-</div>
+  <div id="carregando" class="carregando">Carregando…</div>
 
-<section class="card" style="margin-bottom:14px">
-  <h2>Cobrança</h2>
-  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
-    <div><label class="lab" for="pix">Sua chave Pix</label><input id="pix" class="f" placeholder="Vai na mensagem de cobrança"></div>
-    <div><label class="lab" for="val">Mensalidade (R$)</label><input id="val" class="f" type="number" min="0" step="0.01" value="24.90"></div>
-  </div>
-  <p class="lab">Regras: 15 dias de teste grátis. Se você não confirmar o pagamento em 7 dias depois do vencimento, a barbearia entra em modo restrito (continua lançando, mas não vê ganhos, gastos nem lucro). Clicar em "Sim" libera na hora.</p>
-  <p class="err" id="err" role="alert"></p>
-</section>
+  <main class="conteudo largo" id="app" hidden>
+    <div class="numeros" id="numeros"></div>
+    <div class="barra">
+      <div class="grupo">
+        <input type="search" id="busca" placeholder="Buscar barbearia">
+        <select id="filtro" aria-label="Filtrar situação">
+          <option value="">Todas</option>
+          <option value="atencao">Precisa de atenção</option>
+          <option value="bloqueada">Bloqueadas / desativadas</option>
+        </select>
+      </div>
+      <button class="btn primario" type="button" id="nova">+ Nova barbearia</button>
+    </div>
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr><th>Barbearia</th><th>Contato</th><th class="num">Mensalidade</th><th>Pago até</th><th>Situação</th><th>Ações</th></tr></thead>
+        <tbody id="linhas"></tbody>
+      </table>
+    </div>
+    <p class="privacidade">Por privacidade, a administração não tem acesso a clientes, agenda ou gastos das barbearias.</p>
+  </main>
 
-<section class="card">
-  <h2>Barbearias</h2>
-  <div id="pend"></div>
-  <div id="lista"></div>
-</section>
-</div>
-<div class="toast" id="toast" role="status" hidden></div>
+  <!-- Nova barbearia -->
+  <dialog id="dlg-nova">
+    <form id="form-nova">
+      <h2>Nova barbearia</h2>
+      <p class="dlg-texto">Cria o login da barbearia. Envie o e-mail e a senha inicial para o cliente.</p>
+      <label>Nome da barbearia <input name="nome" required maxlength="120"></label>
+      <div class="linha">
+        <label>Responsável <input name="responsavel" maxlength="120"></label>
+        <label>Telefone <input name="telefone" type="tel" maxlength="40"></label>
+      </div>
+      <label>E-mail de acesso <input name="email" type="email" required autocomplete="off"></label>
+      <label>Senha inicial (mínimo 8 caracteres) <input name="senha" type="text" minlength="8" required autocomplete="new-password"></label>
+      <div class="linha">
+        <label>Mensalidade (R$) <input name="valor_mensal" type="number" min="0" step="0.01" required></label>
+        <label>Pago até <input name="pago_ate" type="date" required></label>
+        <label>Tolerância (dias) <input name="carencia_dias" type="number" min="0" max="60" value="5" required></label>
+      </div>
+      <div class="dlg-acoes">
+        <button class="btn" type="button" data-fechar>Cancelar</button>
+        <button class="btn primario" type="submit">Criar acesso</button>
+      </div>
+    </form>
+  </dialog>
 
-<dialog id="dNova"><h2>Nova barbearia</h2>
-<form id="fNova">
-  <label class="lab" for="n-n">Nome da barbearia</label><input id="n-n" class="f" required>
-  <label class="lab" for="n-t">WhatsApp do dono (com DDD)</label><input id="n-t" class="f" type="tel" placeholder="(11) 91234-5678" required>
-  <label class="lab" for="n-e">E-mail do dono (será o login)</label><input id="n-e" class="f" type="email" required>
-  <p class="err" id="n-err" role="alert"></p>
-  <div class="acts"><button class="btn">Criar acesso</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
+  <!-- Editar -->
+  <dialog id="dlg-editar">
+    <form id="form-editar">
+      <h2>Editar barbearia</h2>
+      <p class="dlg-texto" id="editar-email"></p>
+      <input type="hidden" name="registro_id">
+      <label>Nome da barbearia <input name="nome" required maxlength="120"></label>
+      <div class="linha">
+        <label>Responsável <input name="responsavel" maxlength="120"></label>
+        <label>Telefone <input name="telefone" type="tel" maxlength="40"></label>
+      </div>
+      <div class="linha">
+        <label>Mensalidade (R$) <input name="valor_mensal" type="number" min="0" step="0.01" required></label>
+        <label>Pago até <input name="pago_ate" type="date"></label>
+        <label>Tolerância (dias) <input name="carencia_dias" type="number" min="0" max="60" required></label>
+      </div>
+      <div class="dlg-acoes">
+        <button class="btn" type="button" data-fechar>Cancelar</button>
+        <button class="btn primario" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
 
-<dialog id="dCred"><h2>Acesso criado</h2>
-<p class="lab" style="margin-bottom:8px">Envie agora ao dono. A senha temporária aparece só desta vez.</p>
-<div class="cred" id="cred"></div>
-<div class="acts"><a class="wa" id="cred-wa" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>
-<button class="btn sec sm" id="cred-copiar" type="button">Copiar mensagem</button>
-<button class="btn sm" type="button" data-close>Fechar</button></div>
-</dialog>
+  <!-- Pagamento -->
+  <dialog id="dlg-pagamento">
+    <form id="form-pagamento">
+      <h2>Registrar pagamento</h2>
+      <p class="dlg-texto" id="pagamento-texto"></p>
+      <input type="hidden" name="registro_id">
+      <div class="linha">
+        <label>Valor recebido (R$) <input name="valor" type="number" min="0" step="0.01" required></label>
+        <label>Recebido em <input name="pago_em" type="date" required></label>
+      </div>
+      <label>Novo vencimento (acesso liberado até) <input name="novo_vencimento" type="date" required></label>
+      <label>Observação <input name="observacao" maxlength="200" placeholder="Ex.: Pix, referente a novembro"></label>
+      <div class="dlg-acoes">
+        <button class="btn" type="button" data-fechar>Cancelar</button>
+        <button class="btn primario" type="submit">Registrar</button>
+      </div>
+    </form>
+  </dialog>
 
-<script src="/js/api.js"></script>
-<script src="/js/admin.js"></script>
+  <!-- Senha -->
+  <dialog id="dlg-senha">
+    <form id="form-senha">
+      <h2>Redefinir senha</h2>
+      <p class="dlg-texto" id="senha-texto"></p>
+      <input type="hidden" name="registro_id">
+      <label>Nova senha (mínimo 8 caracteres) <input name="senha" type="text" minlength="8" required autocomplete="new-password"></label>
+      <div class="dlg-acoes">
+        <button class="btn" type="button" data-fechar>Cancelar</button>
+        <button class="btn primario" type="submit">Salvar senha</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Excluir -->
+  <dialog id="dlg-excluir">
+    <form id="form-excluir">
+      <h2>Excluir barbearia</h2>
+      <p class="dlg-texto">Isso apaga o login e <strong>todos os dados</strong> da barbearia (clientes, agenda, gastos e pagamentos). Não pode ser desfeito. Se for só uma pausa, use "Desativar".</p>
+      <input type="hidden" name="registro_id">
+      <label id="excluir-rotulo">Digite o nome da barbearia para confirmar <input name="confirmacao" autocomplete="off" required></label>
+      <div class="dlg-acoes">
+        <button class="btn" type="button" data-fechar>Cancelar</button>
+        <button class="btn perigo-cheio" type="submit">Excluir de vez</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Histórico de pagamentos -->
+  <dialog id="dlg-historico">
+    <form method="dialog">
+      <h2 id="hist-titulo">Pagamentos</h2>
+      <div id="hist-conteudo"></div>
+      <div class="dlg-acoes"><button class="btn" type="submit">Fechar</button></div>
+    </form>
+  </dialog>
 </body>
 </html>
