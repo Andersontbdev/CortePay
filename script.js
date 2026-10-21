@@ -1,8 +1,8 @@
 // ======================= CONFIGURAÇÃO =======================
 // Cole aqui os dados do seu projeto no Supabase (Project Settings > API).
 // A chave pública (anon/publishable) pode ficar aqui: a segurança está nas regras do banco (supabase.sql).
-const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_PROJETO';
-const SUPABASE_KEY = 'COLE_AQUI_A_CHAVE_PUBLICA';
+const SUPABASE_URL = 'https://qiwjxoymaccslovinfgx.supabase.co/rest/v1/';
+const SUPABASE_KEY = 'sb_publishable_wI9HINvYa3vAKvKABdr3NQ_xSH_MZSI';
 // ============================================================
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
