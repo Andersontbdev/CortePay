@@ -76,3 +76,76 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .login-card{width:min(92vw,380px);margin:12vh auto 0}
 .login-card .seg{width:100%;margin-bottom:16px}.login-card .seg button{flex:1}
 .link{background:none;border:0;color:var(--blue);cursor:pointer;padding:6px 0;font-size:14px;text-decoration:underline}
+
+
+/* ===== Tema Barbershop: carvão, vermelho, branco e azul ===== */
+:root{
+  color-scheme:dark;
+  --bg:#0b0e13;--card:#141a23;--ink:#f4f6fa;--mut:#a8b2c1;--line:#2a3442;
+  --red:#e33b43;--blue:#3478c8;--ok:#45c48b;--warn:#f0b34a;--track:#222b37;
+}
+body{background:var(--bg);color:var(--ink)}
+.pole{height:7px;box-shadow:0 2px 18px rgba(227,59,67,.2)}
+.card{background:linear-gradient(145deg,rgba(22,29,40,.98),rgba(15,20,29,.98));border-color:#303b4a;box-shadow:0 12px 32px rgba(0,0,0,.16)}
+header{padding-bottom:14px;border-bottom:1px solid var(--line)}
+.brand .ini{background:linear-gradient(135deg,#202b3a,#10151d);border:1px solid var(--red);color:#fff}
+h1,h2{color:#fff}
+h2{position:relative;padding-bottom:8px}
+h2:after{content:"";display:block;width:42px;height:3px;border-radius:3px;margin-top:8px;background:linear-gradient(90deg,var(--red) 0 50%,var(--blue) 50% 100%)}
+.btn{background:var(--red);border-color:var(--red);color:#fff;transition:transform .15s ease,filter .15s ease}
+.btn:hover,.fab:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn.sec{background:#1b2430;border-color:#344154;color:#f4f6fa}
+.seg{background:#202936;border:1px solid #303b4a}
+.seg button{color:#b9c3d0}
+.seg button[aria-pressed=true]{background:#f4f6fa;color:#10151d;box-shadow:0 2px 8px rgba(0,0,0,.22)}
+.tabs button{background:#151c26;border-color:#2c3746;color:#bdc7d4}
+.tabs button[aria-pressed=true]{background:linear-gradient(110deg,var(--red),#b92532);color:#fff;border-color:var(--red)}
+.f{background:#0e131b;color:#f5f7fb;border-color:#344154}
+.f::placeholder{color:#758195}
+.f:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(52,120,200,.18);outline:0}
+.b{background:var(--blue)}.b.top{background:var(--red)}
+.tr i{background:var(--blue)}.tr i.red{background:var(--red)}
+.av{background:#202a37;color:#fff;border:1px solid #344154}
+.chip{background:#202a37;color:#c3cbd7}.chip.ok{background:rgba(69,196,139,.15);color:#65dfa8}.chip.red{background:rgba(227,59,67,.16);color:#ff7278}.chip.blue{background:rgba(52,120,200,.17);color:#83b9ff}
+.ban{background:rgba(227,59,67,.08)}
+.fab{background:linear-gradient(115deg,var(--red),#b52332);box-shadow:0 8px 26px rgba(227,59,67,.25)}
+dialog{background:#141a23;color:var(--ink);border-color:#344154;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+.wa{border-color:var(--ok);color:#65dfa8}
+.link{color:#80b6ff}
+.toast{background:#f4f6fa;color:#10151d;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+.toast.erro{background:var(--red);color:#fff}
+
+/* Fundo ilustrado somente nas telas de autenticação */
+body:has(#tela-login:not([hidden])),
+body:has(#tela-convite:not([hidden])){
+  min-height:100vh;
+  background-color:#080a0e;
+  background-image:linear-gradient(90deg,rgba(5,7,10,.42),rgba(5,7,10,.56)),url("barbearia-bg.png");
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+}
+body:has(#tela-login:not([hidden])) .pole,
+body:has(#tela-convite:not([hidden])) .pole{position:fixed;top:0;left:0;right:0;z-index:5}
+.login-card{
+  width:min(92vw,410px);margin:clamp(100px,14vh,150px) auto 40px;
+  padding:28px;background:rgba(11,15,22,.88);border:1px solid rgba(255,255,255,.16);
+  border-top:3px solid var(--red);border-radius:18px;backdrop-filter:blur(16px);
+  box-shadow:0 24px 80px rgba(0,0,0,.52),0 0 0 1px rgba(52,120,200,.08);
+}
+.login-card h1{font-size:30px;letter-spacing:-.04em}
+.login-card .sub{color:#c1cad6}
+.login-card .lab{color:#d5dce6}
+.login-card .f{background:rgba(5,9,15,.72);border-color:#394657}
+.login-card .seg{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
+.login-card .seg button[aria-pressed=true]{background:#f5f7fb;color:#10151d}
+.login-card .btn{background:linear-gradient(105deg,var(--red),#b92432);border-color:var(--red);font-weight:700}
+.login-card .btn:focus-visible{outline-color:#fff}
+@media(max-width:600px){
+  body:has(#tela-login:not([hidden])),body:has(#tela-convite:not([hidden])){background-position:38% center}
+  .login-card{margin-top:100px;padding:23px 20px}
+  .wrap{padding:16px 12px 100px}
+  .card{padding:16px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
