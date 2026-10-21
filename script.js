@@ -13,6 +13,24 @@ const brl = n => Number(n || 0).toLocaleString('pt-BR', {style: 'currency', curr
 function guarda(k, v) {
   try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; }
 }
+
+// Tema visual escolhido pelo próprio barbeiro e salvo neste navegador.
+function aplicarTema(tema) {
+  const escuro = tema === 'dark';
+  document.documentElement.dataset.theme = escuro ? 'dark' : 'light';
+  const botao = document.querySelector('#tema-toggle');
+  if (botao) {
+    botao.textContent = escuro ? '☀️ Modo claro' : '🌙 Modo escuro';
+    botao.setAttribute('aria-pressed', String(escuro));
+    botao.setAttribute('aria-label', escuro ? 'Ativar modo claro' : 'Ativar modo escuro');
+  }
+}
+aplicarTema(guarda('cortepay-tema') || 'light');
+document.querySelector('#tema-toggle')?.addEventListener('click', () => {
+  const proximo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  guarda('cortepay-tema', proximo);
+  aplicarTema(proximo);
+});
 function traduz(m) {
   m = String(m || '');
   const t = [['Invalid login credentials', 'E-mail ou senha incorretos.'], ['Email not confirmed', 'Confirme o seu e-mail antes de entrar (veja a caixa de entrada).'],
