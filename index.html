@@ -229,6 +229,36 @@
   </div>
 </header>
 
+<section class="card" style="margin-bottom:14px" id="admin-dashboard">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+    <div><h2>Dashboard executivo</h2><p class="sub">Receita estimada, recebimentos, crescimento e inadimplência</p></div>
+    <button class="btn sec sm" id="adm-atualizar" type="button">Atualizar indicadores</button>
+  </div>
+  <div class="grid admin-kpis" style="margin-bottom:18px">
+    <section class="card q"><p class="lab">MRR estimado</p><p class="num admin-num" id="ad-mrr">R$ 0,00</p><p class="lab">Assinaturas ativas previstas</p></section>
+    <section class="card q"><p class="lab">Recebido neste mês</p><p class="num admin-num" id="ad-recebido">R$ 0,00</p><p class="lab" id="ad-pagamentos-qtd">Confirmações registradas</p></section>
+    <section class="card q"><p class="lab">Barbearias cadastradas</p><p class="num admin-num" id="ad-total">0</p><p class="lab" id="ad-novas">0 novas neste mês</p></section>
+    <section class="card q"><p class="lab">Inadimplentes</p><p class="num admin-num" id="ad-inadimplentes">0</p><p class="lab">Atrasadas ou em modo restrito</p></section>
+  </div>
+  <div class="grid">
+    <section class="card half">
+      <h2>Evolução de cadastros</h2><p class="lab">Novas barbearias por mês · últimos 6 meses</p>
+      <div class="bars admin-bars" id="ad-crescimento" aria-label="Gráfico de novas barbearias"></div><div class="ticks" id="ad-crescimento-ticks"></div>
+    </section>
+    <section class="card half">
+      <h2>Recebimentos mensais</h2><p class="lab">Pagamentos confirmados · últimos 6 meses</p>
+      <div class="bars admin-bars" id="ad-receitas" aria-label="Gráfico de recebimentos mensais"></div><div class="ticks" id="ad-receitas-ticks"></div>
+    </section>
+    <section class="card half">
+      <h2>Inadimplência para acompanhar</h2><div id="ad-lista-inadimplentes"></div>
+    </section>
+    <section class="card half">
+      <h2>Últimos pagamentos confirmados</h2><div id="ad-ultimos-pagamentos"></div>
+      <p class="lab" style="margin-top:10px">O histórico começa quando esta atualização for instalada; pagamentos antigos não serão reconstruídos automaticamente.</p>
+    </section>
+  </div>
+</section>
+
 <div class="grid" style="margin-bottom:14px">
   <section class="card q"><p class="lab">Em dia</p><p class="num" style="font-size:28px" id="m-o">-</p></section>
   <section class="card q"><p class="lab">Vencem em breve</p><p class="num" style="font-size:28px" id="m-p">-</p></section>

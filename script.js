@@ -470,7 +470,7 @@ $('#fCfg').addEventListener('submit', async e => {
 });
 
 // ======================= ADMINISTRAÇÃO (só acesso e cobrança) =======================
-let LISTA = [], MENSAGEM = '';
+let LISTA = [], MENSAGEM = '', HIST_PAGAMENTOS = [], EVOLUCAO = [];
 const dinheiro = () => Number($('#val').value) || 0;
 $('#pix').value = guarda('pix') || ''; $('#val').value = guarda('mensalidade') || '24.90';
 const rotulo = b => {
@@ -504,7 +504,42 @@ function admDesenhar() {
   $('#m-o').textContent = c.EM_DIA + c.TESTE; $('#m-p').textContent = c.VENCE_EM_BREVE; $('#m-a').textContent = c.ATRASADA; $('#m-s').textContent = c.RESTRITO;
   $('#pend').innerHTML = pend ? `<div class="pend">${pend} ${pend === 1 ? 'barbearia aguarda' : 'barbearias aguardam'} a sua confirmação de pagamento. Sem resposta em 7 dias após o vencimento, entram em modo restrito.</div>` : '';
 }
-async function admCarregar() { LISTA = await rpc('admin_listar'); admDesenhar(); }
+function mesKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+function mesesUltimosSeis() { const hoje = new Date(); return Array.from({length:6}, (_,i) => { const d = new Date(hoje.getFullYear(), hoje.getMonth() - (5-i), 1, 12); return {key:mesKey(d), label:d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','')}; }); }
+function desenharBarrasAdmin(containerId, ticksId, values, formatMoney=false) {
+  const el = $('#' + containerId), tx = $('#' + ticksId), max = Math.max(1, ...values.map(x => Number(x.value)||0));
+  el.innerHTML = values.map(x => { const v=Number(x.value)||0, h=v ? Math.max(5,Math.round(v/max*100)) : 0; return `<div class="col" title="${esc(x.label)}: ${esc(formatMoney?brl(v):v)}"><div class="b${v===max?' top':''}" style="height:${h}%"></div></div>`; }).join('');
+  tx.innerHTML = values.map(x => `<span>${esc(x.label)}</span>`).join('');
+}
+function admDashboard() {
+  const mensalidade = dinheiro();
+  const ativas = LISTA.filter(b => ['EM_DIA','VENCE_EM_BREVE'].includes(b.situacao) && !b.em_teste && !b.restricao_manual).length;
+  const inad = LISTA.filter(b => ['ATRASADA','RESTRITO'].includes(b.situacao) || b.restricao_manual);
+  const hoje = new Date(), mk = mesKey(hoje), meses = mesesUltimosSeis();
+  const pagMes = HIST_PAGAMENTOS.filter(p => String(p.pago_em || '').slice(0,7) === mk);
+  $('#ad-mrr').textContent = brl(ativas * mensalidade);
+  $('#ad-recebido').textContent = brl(pagMes.reduce((s,p)=>s+Number(p.valor||0),0));
+  $('#ad-pagamentos-qtd').textContent = `${pagMes.length} ${pagMes.length===1?'pagamento confirmado':'pagamentos confirmados'}`;
+  $('#ad-total').textContent = LISTA.length;
+  $('#ad-novas').textContent = `${EVOLUCAO.filter(x=>String(x.mes).slice(0,7)===mk).reduce((s,x)=>s+Number(x.total||0),0)} novas neste mês`;
+  $('#ad-inadimplentes').textContent = inad.length;
+  const novosMap = new Map(EVOLUCAO.map(x=>[String(x.mes).slice(0,7),Number(x.total||0)]));
+  desenharBarrasAdmin('ad-crescimento','ad-crescimento-ticks',meses.map(m=>({label:m.label,value:novosMap.get(m.key)||0})));
+  const receitaMap = new Map(); HIST_PAGAMENTOS.forEach(p=>{const k=String(p.pago_em||'').slice(0,7);receitaMap.set(k,(receitaMap.get(k)||0)+Number(p.valor||0));});
+  desenharBarrasAdmin('ad-receitas','ad-receitas-ticks',meses.map(m=>({label:m.label,value:receitaMap.get(m.key)||0})),true);
+  $('#ad-lista-inadimplentes').innerHTML = inad.length ? inad.slice(0,6).map(b=>`<div class="row2"><span class="av">${esc((b.nome||'?')[0])}</span><div class="who"><b>${esc(b.nome)}</b><small>${b.dias_atraso>0?`Atraso de ${b.dias_atraso} dia(s)`:'Acesso restrito'}</small></div><span class="chip red">${esc(b.situacao==='RESTRITO'?'Restrito':'Atrasada')}</span></div>`).join('') : vazio('Nenhuma barbearia inadimplente no momento.');
+  $('#ad-ultimos-pagamentos').innerHTML = HIST_PAGAMENTOS.length ? HIST_PAGAMENTOS.slice(0,6).map(p=>`<div class="row2"><span class="av">✓</span><div class="who"><b>${esc(p.nome||'Barbearia')}</b><small>${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'Data não disponível'}</small></div><b>${brl(p.valor)}</b></div>`).join('') : vazio('Nenhum pagamento registrado ainda. As próximas confirmações aparecerão aqui.');
+}
+async function admCarregar() {
+  const [lista, pagamentos, evolucao] = await Promise.all([
+    rpc('admin_listar'),
+    rpc('admin_pagamentos_listar').catch(()=>[]),
+    rpc('admin_evolucao_cadastros').catch(()=>[])
+  ]);
+  LISTA = lista || []; HIST_PAGAMENTOS = pagamentos || []; EVOLUCAO = evolucao || [];
+  admDesenhar(); admDashboard();
+}
+$('#adm-atualizar').addEventListener('click', () => seguro(admCarregar));
 $('#pix').addEventListener('input', () => { guarda('pix', $('#pix').value.trim()); $('#err').textContent = ''; admDesenhar(); });
 $('#val').addEventListener('input', () => { guarda('mensalidade', $('#val').value); admDesenhar(); });
 $('#lista').addEventListener('click', e => {
@@ -514,7 +549,8 @@ $('#lista').addEventListener('click', e => {
   const id = Number(b.closest('[data-id]').dataset.id), a = b.dataset.a;
   seguro(async () => {
     if (a === 'copiar') { const x = LISTA.find(y => y.id === id); try { await navigator.clipboard.writeText(msgConvite(x)); toast('Convite copiado.'); } catch (er) { toast('Não foi possível copiar.', true); } return; }
-    if (a === 'sim' || a === 'nao') await rpc('admin_pagamento', {p_id: id, p_pago: a === 'sim'});
+    if (a === 'sim') await rpc('admin_confirmar_pagamento', {p_id: id, p_valor: dinheiro()});
+    else if (a === 'nao') await rpc('admin_pagamento', {p_id: id, p_pago: false});
     else await rpc('admin_restricao', {p_id: id, p_restrito: a === 'restringir'});
     await admCarregar();
   });
