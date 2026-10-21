@@ -231,12 +231,14 @@
 
 <section class="card" style="margin-bottom:14px" id="admin-dashboard">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-    <div><h2>Dashboard executivo</h2><p class="sub">Receita estimada, recebimentos, crescimento e inadimplência</p></div>
+    <div><h2>Dashboard executivo</h2><p class="sub">Implantação única de R$ 99,90 + manutenção mensal de R$ 24,90</p></div>
     <button class="btn sec sm" id="adm-atualizar" type="button">Atualizar indicadores</button>
   </div>
   <div class="grid admin-kpis" style="margin-bottom:18px">
     <section class="card q"><p class="lab">MRR estimado</p><p class="num admin-num" id="ad-mrr">R$ 0,00</p><p class="lab">Assinaturas ativas previstas</p></section>
     <section class="card q"><p class="lab">Recebido neste mês</p><p class="num admin-num" id="ad-recebido">R$ 0,00</p><p class="lab" id="ad-pagamentos-qtd">Confirmações registradas</p></section>
+    <section class="card q"><p class="lab">Implantações recebidas no mês</p><p class="num admin-num" id="ad-aquisicao-recebida">R$ 0,00</p><p class="lab">Taxa única de R$ 99,90</p></section>
+    <section class="card q"><p class="lab">Mensalidades recebidas no mês</p><p class="num admin-num" id="ad-mensalidades-recebidas">R$ 0,00</p><p class="lab">Manutenção de R$ 24,90</p></section>
     <section class="card q"><p class="lab">Barbearias cadastradas</p><p class="num admin-num" id="ad-total">0</p><p class="lab" id="ad-novas">0 novas neste mês</p></section>
     <section class="card q"><p class="lab">Inadimplentes</p><p class="num admin-num" id="ad-inadimplentes">0</p><p class="lab">Atrasadas ou em modo restrito</p></section>
   </div>
@@ -254,7 +256,7 @@
     </section>
     <section class="card half">
       <h2>Últimos pagamentos confirmados</h2><div id="ad-ultimos-pagamentos"></div>
-      <p class="lab" style="margin-top:10px">O histórico começa quando esta atualização for instalada; pagamentos antigos não serão reconstruídos automaticamente.</p>
+      <p class="lab" style="margin-top:10px">O histórico começa quando esta atualização for instalada; pagamentos antigos não serão reconstruídos automaticamente. Implantação e mensalidade são registradas separadamente.</p>
     </section>
   </div>
 </section>
@@ -270,9 +272,9 @@
   <h2>Cobrança</h2>
   <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
     <div><label class="lab" for="pix">Sua chave Pix</label><input id="pix" class="f" placeholder="Vai na mensagem de cobrança"></div>
-    <div><label class="lab" for="val">Mensalidade (R$)</label><input id="val" class="f" type="number" min="0" step="0.01" value="24.90"></div>
+    <div><label class="lab" for="val">Manutenção mensal (R$)</label><input id="val" class="f" type="number" value="24.90" readonly></div>
   </div>
-  <p class="lab">Regras: 15 dias de teste grátis. Se você não confirmar o pagamento em 7 dias depois do vencimento, a barbearia entra em modo restrito (continua lançando, mas não vê ganhos, gastos nem lucro). Clicar em "Sim" libera na hora.</p>
+  <p class="lab">Modelo comercial: R$ 99,90 de implantação (pagamento único) e R$ 24,90 de manutenção mensal. Regras: 15 dias de teste grátis. Se você não confirmar o pagamento em 7 dias depois do vencimento, a barbearia entra em modo restrito (continua lançando, mas não vê ganhos, gastos nem lucro). Clicar em "Sim" libera na hora.</p>
   <p class="err" id="err" role="alert"></p>
 </section>
 

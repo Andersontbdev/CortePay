@@ -470,9 +470,10 @@ $('#fCfg').addEventListener('submit', async e => {
 });
 
 // ======================= ADMINISTRAÇÃO (só acesso e cobrança) =======================
-let LISTA = [], MENSAGEM = '', HIST_PAGAMENTOS = [], EVOLUCAO = [];
-const dinheiro = () => Number($('#val').value) || 0;
-$('#pix').value = guarda('pix') || ''; $('#val').value = guarda('mensalidade') || '24.90';
+let LISTA = [], MENSAGEM = '', HIST_PAGAMENTOS = [], EVOLUCAO = [], AQUISICOES_PAGAS = new Set();
+const TAXA_AQUISICAO = 99.90, MENSALIDADE_OFICIAL = 24.90;
+const dinheiro = () => MENSALIDADE_OFICIAL;
+$('#pix').value = guarda('pix') || ''; $('#val').value = MENSALIDADE_OFICIAL.toFixed(2); $('#val').readOnly = true;
 const rotulo = b => {
   switch (b.situacao) {
     case 'TESTE': return ['blue', 'Em teste: ' + Math.max(0, -b.dias_atraso) + ' dias restantes'];
@@ -496,7 +497,8 @@ function admDesenhar() {
       <span class="chip ${cor}">${esc(texto)}</span>
       <div class="acts">
         ${b.ativada ? '' : `<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(b.telefone))}?text=${encodeURIComponent(msgConvite(b))}">Enviar convite</a><button class="btn sec sm" data-a="copiar">Copiar convite</button>`}
-        ${teste ? '' : `<span class="lab">Pagou?</span><button class="btn sec sm" data-a="sim">Sim</button><button class="btn sec sm${b.nao_pago ? ' sel' : ''}" data-a="nao">Não</button>`}
+        ${AQUISICOES_PAGAS.has(Number(b.id)) ? '<span class="chip ok">Implantação paga</span>' : `<button class="btn sec sm" data-a="aquisicao" title="Confirmar recebimento único de R$ 99,90">Confirmar implantação (R$ 99,90)</button>`}
+        ${teste ? '' : `<span class="lab">Mensalidade paga?</span><button class="btn sec sm" data-a="sim">Sim</button><button class="btn sec sm${b.nao_pago ? ' sel' : ''}" data-a="nao">Não</button>`}
         ${cobrar ? `<a class="wa" data-w="1" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(b.telefone))}?text=${encodeURIComponent(msgCobranca(b))}">Cobrar no WhatsApp</a>` : ''}
         <button class="btn sec sm" data-a="${b.restricao_manual ? 'liberar' : 'restringir'}">${b.restricao_manual ? 'Liberar visualização' : 'Restringir visualização'}</button>
       </div></div>`;
@@ -512,7 +514,7 @@ function desenharBarrasAdmin(containerId, ticksId, values, formatMoney=false) {
   tx.innerHTML = values.map(x => `<span>${esc(x.label)}</span>`).join('');
 }
 function admDashboard() {
-  const mensalidade = dinheiro();
+  const mensalidade = MENSALIDADE_OFICIAL;
   const ativas = LISTA.filter(b => ['EM_DIA','VENCE_EM_BREVE'].includes(b.situacao) && !b.em_teste && !b.restricao_manual).length;
   const inad = LISTA.filter(b => ['ATRASADA','RESTRITO'].includes(b.situacao) || b.restricao_manual);
   const hoje = new Date(), mk = mesKey(hoje), meses = mesesUltimosSeis();
@@ -520,6 +522,8 @@ function admDashboard() {
   $('#ad-mrr').textContent = brl(ativas * mensalidade);
   $('#ad-recebido').textContent = brl(pagMes.reduce((s,p)=>s+Number(p.valor||0),0));
   $('#ad-pagamentos-qtd').textContent = `${pagMes.length} ${pagMes.length===1?'pagamento confirmado':'pagamentos confirmados'}`;
+  $('#ad-aquisicao-recebida').textContent = brl(pagMes.filter(p=>p.tipo==='aquisicao').reduce((s,p)=>s+Number(p.valor||0),0));
+  $('#ad-mensalidades-recebidas').textContent = brl(pagMes.filter(p=>p.tipo!=='aquisicao').reduce((s,p)=>s+Number(p.valor||0),0));
   $('#ad-total').textContent = LISTA.length;
   $('#ad-novas').textContent = `${EVOLUCAO.filter(x=>String(x.mes).slice(0,7)===mk).reduce((s,x)=>s+Number(x.total||0),0)} novas neste mês`;
   $('#ad-inadimplentes').textContent = inad.length;
@@ -531,17 +535,19 @@ function admDashboard() {
   $('#ad-ultimos-pagamentos').innerHTML = HIST_PAGAMENTOS.length ? HIST_PAGAMENTOS.slice(0,6).map(p=>`<div class="row2"><span class="av">✓</span><div class="who"><b>${esc(p.nome||'Barbearia')}</b><small>${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'Data não disponível'}</small></div><b>${brl(p.valor)}</b></div>`).join('') : vazio('Nenhum pagamento registrado ainda. As próximas confirmações aparecerão aqui.');
 }
 async function admCarregar() {
-  const [lista, pagamentos, evolucao] = await Promise.all([
+  const [lista, pagamentos, evolucao, aquisicoes] = await Promise.all([
     rpc('admin_listar'),
-    rpc('admin_pagamentos_listar').catch(()=>[]),
-    rpc('admin_evolucao_cadastros').catch(()=>[])
+    rpc('admin_pagamentos_listar_v2').catch(()=>rpc('admin_pagamentos_listar').catch(()=>[])),
+    rpc('admin_evolucao_cadastros').catch(()=>[]),
+    rpc('admin_aquisicoes_listar').catch(()=>[])
   ]);
   LISTA = lista || []; HIST_PAGAMENTOS = pagamentos || []; EVOLUCAO = evolucao || [];
+  AQUISICOES_PAGAS = new Set((aquisicoes || []).map(x=>Number(x.barbearia_id))); 
   admDesenhar(); admDashboard();
 }
 $('#adm-atualizar').addEventListener('click', () => seguro(admCarregar));
 $('#pix').addEventListener('input', () => { guarda('pix', $('#pix').value.trim()); $('#err').textContent = ''; admDesenhar(); });
-$('#val').addEventListener('input', () => { guarda('mensalidade', $('#val').value); admDesenhar(); });
+$('#val').addEventListener('input', () => { $('#val').value = MENSALIDADE_OFICIAL.toFixed(2); });
 $('#lista').addEventListener('click', e => {
   const w = e.target.closest('a[data-w]');
   if (w) { if (!$('#pix').value.trim()) { e.preventDefault(); $('#err').textContent = 'Digite sua chave Pix acima antes de cobrar.'; $('#pix').focus(); } return; }
@@ -549,7 +555,8 @@ $('#lista').addEventListener('click', e => {
   const id = Number(b.closest('[data-id]').dataset.id), a = b.dataset.a;
   seguro(async () => {
     if (a === 'copiar') { const x = LISTA.find(y => y.id === id); try { await navigator.clipboard.writeText(msgConvite(x)); toast('Convite copiado.'); } catch (er) { toast('Não foi possível copiar.', true); } return; }
-    if (a === 'sim') await rpc('admin_confirmar_pagamento', {p_id: id, p_valor: dinheiro()});
+    if (a === 'aquisicao') { if (!confirm('Confirma que recebeu a taxa única de implantação de R$ 99,90 desta barbearia?')) return; await rpc('admin_confirmar_aquisicao', {p_id: id, p_valor: TAXA_AQUISICAO}); }
+    else if (a === 'sim') await rpc('admin_confirmar_pagamento', {p_id: id, p_valor: dinheiro()});
     else if (a === 'nao') await rpc('admin_pagamento', {p_id: id, p_pago: false});
     else await rpc('admin_restricao', {p_id: id, p_restrito: a === 'restringir'});
     await admCarregar();
