@@ -79,44 +79,60 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .link{background:none;border:0;color:var(--blue);cursor:pointer;padding:6px 0;font-size:14px;text-decoration:underline}
 
 
-/* ===== Tema Barbershop: carvão, vermelho, branco e azul ===== */
+/* ===== Identidade visual adaptável ao tema escolhido ===== */
 :root{
+  color-scheme:light;
+  --bg:#F3F4F7;--card:#FFFFFF;--ink:#16202E;--mut:#5B6675;--line:#E3E6EB;
+  --red:#C8372D;--blue:#1F4E8C;--ok:#1E7A4F;--warn:#9A6200;--track:#ECEFF3;
+  --card-gradient:linear-gradient(145deg,#FFFFFF,#F8F9FB);
+  --btn-sec-bg:#FFFFFF;--btn-sec-ink:#16202E;--tab-bg:#FFFFFF;--tab-ink:#5B6675;
+  --input-bg:#FFFFFF;--input-ink:#16202E;--input-border:#D5DAE2;
+  --seg-bg:#ECEFF3;--seg-ink:#5B6675;--avatar-bg:#ECEFF3;--avatar-ink:#16202E;
+  --dialog-bg:#FFFFFF;--dialog-ink:#16202E;--dialog-backdrop:rgba(0,0,0,.45);
+  --login-overlay:rgba(5,7,10,.52);--login-card-bg:rgba(255,255,255,.94);
+}
+:root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#0b0e13;--card:#141a23;--ink:#f4f6fa;--mut:#a8b2c1;--line:#2a3442;
   --red:#e33b43;--blue:#3478c8;--ok:#45c48b;--warn:#f0b34a;--track:#222b37;
+  --card-gradient:linear-gradient(145deg,rgba(22,29,40,.98),rgba(15,20,29,.98));
+  --btn-sec-bg:#1b2430;--btn-sec-ink:#f4f6fa;--tab-bg:#151c26;--tab-ink:#bdc7d4;
+  --input-bg:#0e131b;--input-ink:#f5f7fb;--input-border:#344154;
+  --seg-bg:#202936;--seg-ink:#b9c3d0;--avatar-bg:#202a37;--avatar-ink:#fff;
+  --dialog-bg:#141a23;--dialog-ink:#f4f6fa;--dialog-backdrop:rgba(0,0,0,.72);
+  --login-overlay:rgba(5,7,10,.52);--login-card-bg:rgba(11,15,22,.88);
 }
 body{background:var(--bg);color:var(--ink)}
-.pole{height:7px;box-shadow:0 2px 18px rgba(227,59,67,.2)}
-.card{background:linear-gradient(145deg,rgba(22,29,40,.98),rgba(15,20,29,.98));border-color:#303b4a;box-shadow:0 12px 32px rgba(0,0,0,.16)}
+.pole{height:7px;box-shadow:0 2px 18px rgba(227,59,67,.16)}
+.card{background:var(--card-gradient);border-color:var(--line);box-shadow:0 12px 32px rgba(0,0,0,.10)}
 header{padding-bottom:14px;border-bottom:1px solid var(--line)}
-.brand .ini{background:linear-gradient(135deg,#202b3a,#10151d);border:1px solid var(--red);color:#fff}
-h1,h2{color:#fff}
+.brand .ini{background:var(--card);border:1px solid var(--red);color:var(--ink)}
+h1,h2{color:var(--ink)}
 h2{position:relative;padding-bottom:8px}
 h2:after{content:"";display:block;width:42px;height:3px;border-radius:3px;margin-top:8px;background:linear-gradient(90deg,var(--red) 0 50%,var(--blue) 50% 100%)}
 .btn{background:var(--red);border-color:var(--red);color:#fff;transition:transform .15s ease,filter .15s ease}
 .btn:hover,.fab:hover{filter:brightness(1.1);transform:translateY(-1px)}
-.btn.sec{background:#1b2430;border-color:#344154;color:#f4f6fa}
-.seg{background:#202936;border:1px solid #303b4a}
-.seg button{color:#b9c3d0}
-.seg button[aria-pressed=true]{background:#f4f6fa;color:#10151d;box-shadow:0 2px 8px rgba(0,0,0,.22)}
-.tabs button{background:#151c26;border-color:#2c3746;color:#bdc7d4}
+.btn.sec{background:var(--btn-sec-bg);border-color:var(--line);color:var(--btn-sec-ink)}
+.seg{background:var(--seg-bg);border:1px solid var(--line)}
+.seg button{color:var(--seg-ink)}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.tabs button{background:var(--tab-bg);border-color:var(--line);color:var(--tab-ink)}
 .tabs button[aria-pressed=true]{background:linear-gradient(110deg,var(--red),#b92532);color:#fff;border-color:var(--red)}
-.f{background:#0e131b;color:#f5f7fb;border-color:#344154}
-.f::placeholder{color:#758195}
+.f{background:var(--input-bg);color:var(--input-ink);border-color:var(--input-border)}
+.f::placeholder{color:var(--mut)}
 .f:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(52,120,200,.18);outline:0}
 .b{background:var(--blue)}.b.top{background:var(--red)}
 .tr i{background:var(--blue)}.tr i.red{background:var(--red)}
-.av{background:#202a37;color:#fff;border:1px solid #344154}
-.chip{background:#202a37;color:#c3cbd7}.chip.ok{background:rgba(69,196,139,.15);color:#65dfa8}.chip.red{background:rgba(227,59,67,.16);color:#ff7278}.chip.blue{background:rgba(52,120,200,.17);color:#83b9ff}
+.av{background:var(--avatar-bg);color:var(--avatar-ink);border:1px solid var(--line)}
+.chip{background:var(--track);color:var(--mut)}.chip.ok{background:rgba(69,196,139,.15);color:var(--ok)}.chip.red{background:rgba(227,59,67,.16);color:var(--red)}.chip.blue{background:rgba(52,120,200,.17);color:var(--blue)}
 .ban{background:rgba(227,59,67,.08)}
-.fab{background:linear-gradient(115deg,var(--red),#b52332);box-shadow:0 8px 26px rgba(227,59,67,.25)}
-dialog{background:#141a23;color:var(--ink);border-color:#344154;box-shadow:0 24px 80px rgba(0,0,0,.5)}
-dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
-.wa{border-color:var(--ok);color:#65dfa8}
-.link{color:#80b6ff}
-.toast{background:#f4f6fa;color:#10151d;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+.fab{background:linear-gradient(115deg,var(--red),#b52332);box-shadow:0 8px 26px rgba(227,59,67,.20)}
+dialog{background:var(--dialog-bg);color:var(--dialog-ink);border-color:var(--line);box-shadow:0 24px 80px rgba(0,0,0,.25)}
+dialog::backdrop{background:var(--dialog-backdrop);backdrop-filter:blur(4px)}
+.wa{border-color:var(--ok);color:var(--ok)}
+.link{color:var(--blue)}
+.toast{background:var(--ink);color:var(--bg);box-shadow:0 8px 32px rgba(0,0,0,.20)}
 .toast.erro{background:var(--red);color:#fff}
-
 /* Fundo ilustrado somente nas telas de autenticação */
 body:has(#tela-login:not([hidden])),
 body:has(#tela-convite:not([hidden])){
