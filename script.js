@@ -31,8 +31,14 @@ function toast(msg, erro) {
   clearTimeout(toast.id); toast.id = setTimeout(() => t.hidden = true, 4000);
 }
 const seguro = fn => fn().catch(e => toast(e.message, true));
-const TELAS = ['tela-login', 'tela-convite', 'tela-app', 'tela-admin'];
+const TELAS = ['tela-login', 'tela-convite', 'tela-app', 'tela-admin', 'tela-publico'];
 const tela = id => TELAS.forEach(t => $('#' + t).hidden = t !== id);
+
+$('#copiar-link-agendamento').addEventListener('click', async () => {
+  const url = $('#link-agendamento').value;
+  try { await navigator.clipboard.writeText(url); toast('Link de agendamento copiado!'); }
+  catch (e) { $('#link-agendamento').focus(); $('#link-agendamento').select(); try { document.execCommand('copy'); toast('Link copiado!'); } catch (_) { toast('Selecione e copie o link manualmente.', true); } }
+});
 
 // ---------- Datas e textos ----------
 const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -122,6 +128,8 @@ function marca() {
   $('#ini').textContent = INFO.nome.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase();
   $('#sub').textContent = 'Resumo ' + {hoje: 'de hoje', semana: 'da semana', mes: 'do mês'}[PER];
   $('#tab-ag').hidden = !INFO.usa_agendamento;
+  $('#card-link-agendamento').hidden = !INFO.usa_agendamento;
+  if (INFO.usa_agendamento) { const url = location.origin + location.pathname + '?agendar=' + encodeURIComponent(INFO.id); $('#link-agendamento').value = url; $('#abrir-link-agendamento').href = url; }
   document.body.classList.toggle('restr', INFO.restrito);
   const ban = $('#ban');
   ban.hidden = !(INFO.restrito || INFO.situacao === 'ATRASADA');
@@ -526,9 +534,66 @@ $('#fNova').addEventListener('submit', async e => {
 $('#cred-copiar').addEventListener('click', async () => { try { await navigator.clipboard.writeText(MENSAGEM); toast('Mensagem copiada.'); } catch (er) { toast('Não foi possível copiar.', true); } });
 $('#a-sair').addEventListener('click', sair);
 
+// ======================= AGENDAMENTO PÚBLICO =======================
+let PUBLICO = null, PUBLIC_SERV = [];
+const pubHoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+function pubErro(msg) { $('#pub-erro').textContent = msg || ''; }
+async function pubCarregarHorarios() {
+  pubErro('');
+  const servico = Number($('#pub-servico').value), dia = $('#pub-data').value;
+  $('#pub-hora').innerHTML = '<option value="">Buscando horários...</option>';
+  $('#pub-resumo').hidden = true;
+  if (!servico || !dia || !PUBLICO) { $('#pub-hora').innerHTML = '<option value="">Selecione um serviço e uma data</option>'; return; }
+  try {
+    const rows = await rpc('public_horarios_disponiveis', {p_barbearia_id: Number(PUBLICO.id), p_servico: servico, p_dia: dia});
+    $('#pub-hora').innerHTML = rows.length ? '<option value="">Escolha um horário</option>' + rows.map(r => { const v = String(r.inicio).replace(' ', 'T').slice(0,16); return `<option value="${esc(v)}">${esc(v.slice(11,16))}</option>`; }).join('') : '<option value="">Sem horários disponíveis nesta data</option>';
+  } catch (e) { $('#pub-hora').innerHTML = '<option value="">Não foi possível carregar os horários</option>'; pubErro(e.message); }
+}
+async function iniciarAgendamentoPublico(id) {
+  tela('tela-publico');
+  $('#pub-data').min = pubHoje(); $('#pub-data').value = pubHoje();
+  try {
+    PUBLICO = await rpc('public_agendamento_info', {p_barbearia_id: Number(id)});
+    if (!PUBLICO || !PUBLICO.usa_agendamento) throw new Error('Este link não está disponível. A barbearia pode estar com o agendamento desativado.');
+    $('#pub-nome').textContent = PUBLICO.nome;
+    document.title = 'Agendar horário | ' + PUBLICO.nome;
+    $('#pub-horario').textContent = `Atendimento das ${String(PUBLICO.abre).slice(0,5)} às ${String(PUBLICO.fecha).slice(0,5)}`;
+    $('#pub-logo').hidden = !PUBLICO.logo; if (PUBLICO.logo) $('#pub-logo').src = PUBLICO.logo;
+    PUBLIC_SERV = PUBLICO.servicos || [];
+    $('#pub-servico').innerHTML = '<option value="">Selecione um serviço</option>' + PUBLIC_SERV.map(x => `<option value="${esc(x.id)}">${esc(x.nome)} — ${brl(x.preco)} (${esc(x.duracao_min)} min)</option>`).join('');
+    if (!PUBLIC_SERV.length) throw new Error('Esta barbearia ainda não cadastrou serviços ativos.');
+    await pubCarregarHorarios();
+  } catch (e) {
+    $('#pub-nome').textContent = 'Agendamento indisponível'; pubErro(e.message);
+    $('#form-publico-agendamento').hidden = true;
+  }
+}
+$('#pub-servico').addEventListener('change', pubCarregarHorarios);
+$('#pub-data').addEventListener('change', pubCarregarHorarios);
+$('#pub-hora').addEventListener('change', () => {
+  const s = PUBLIC_SERV.find(x => String(x.id) === $('#pub-servico').value), h = $('#pub-hora').value;
+  const el = $('#pub-resumo');
+  if (s && h) { el.hidden = false; el.textContent = `${s.nome} • ${brl(s.preco)} • ${$('#pub-data').value.split('-').reverse().join('/')} às ${h.slice(11,16)}`; } else el.hidden = true;
+});
+$('#form-publico-agendamento').addEventListener('submit', async e => {
+  e.preventDefault(); pubErro('');
+  const botao = $('#pub-confirmar'); botao.disabled = true; botao.textContent = 'Confirmando...';
+  try {
+    const inicio = $('#pub-hora').value;
+    if (!inicio) throw new Error('Escolha um horário disponível.');
+    await rpc('public_agenda_marcar', {p_barbearia_id: Number(PUBLICO.id), p_nome: $('#pub-cliente').value.trim(), p_telefone: $('#pub-telefone').value, p_servico: Number($('#pub-servico').value), p_inicio: inicio + ':00'});
+    $('#form-publico-agendamento').hidden = true;
+    $('#pub-erro').className = 'success-message'; $('#pub-erro').textContent = 'Agendamento confirmado! Se precisar alterar o horário, entre em contato diretamente com a barbearia.';
+  } catch (e2) { pubErro(e2.message); await pubCarregarHorarios(); }
+  finally { botao.disabled = false; botao.textContent = 'Confirmar agendamento'; }
+});
+
 // ======================= INÍCIO =======================
 (function inicio() {
-  const conv = new URLSearchParams(location.search).get('convite');
+  const params = new URLSearchParams(location.search);
+  const agendar = params.get('agendar');
+  if (agendar && /^\d+$/.test(agendar)) { iniciarAgendamentoPublico(agendar); return; }
+  const conv = params.get('convite');
   if (conv) { guarda('convite', conv); $('#cd-c').value = conv; document.querySelector('[data-lt="cadastro"]').click(); }
   entrar().catch(e => { tela('tela-login'); toast(e.message, true); });
 })();

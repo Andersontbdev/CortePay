@@ -44,6 +44,24 @@
   </form>
 </main>
 
+<main id="tela-publico" class="public-booking" hidden>
+  <section class="card public-booking-card">
+    <div class="public-brand"><img id="pub-logo" alt="Logotipo da barbearia" hidden><div><p class="eyebrow">AGENDAMENTO ONLINE</p><h1 id="pub-nome">Barbearia</h1><p class="sub" id="pub-horario"></p></div></div>
+    <p class="sub">Escolha o serviço, selecione um dia e horário disponível e confirme seu agendamento.</p>
+    <form id="form-publico-agendamento">
+      <label class="lab" for="pub-servico">Serviço</label><select id="pub-servico" class="f" required><option value="">Carregando serviços...</option></select>
+      <label class="lab" for="pub-data">Data</label><input id="pub-data" class="f" type="date" required>
+      <label class="lab" for="pub-hora">Horário disponível</label><select id="pub-hora" class="f" required><option value="">Selecione um serviço e uma data</option></select>
+      <label class="lab" for="pub-cliente">Seu nome</label><input id="pub-cliente" class="f" autocomplete="name" maxlength="120" required>
+      <label class="lab" for="pub-telefone">WhatsApp com DDD</label><input id="pub-telefone" class="f" type="tel" autocomplete="tel" placeholder="(11) 91234-5678" required>
+      <div id="pub-resumo" class="public-summary" hidden></div>
+      <p class="err" id="pub-erro" role="alert"></p>
+      <button class="btn" id="pub-confirmar" style="width:100%">Confirmar agendamento</button>
+    </form>
+    <p class="lab public-foot">Seu horário só estará reservado após a confirmação nesta tela.</p>
+  </section>
+</main>
+
 <div id="tela-app" hidden>
 <div class="wrap">
 <header>
@@ -71,6 +89,12 @@
 
 <main>
 <section id="v-painel" class="grid">
+<section id="card-link-agendamento" class="card full booking-link-card" hidden>
+    <h2>Link de agendamento online</h2>
+    <p class="sub">Compartilhe este link com seus clientes para que escolham o serviço e reservem um horário disponíveis, sem precisar falar com você antes.</p>
+    <div class="booking-link-row"><input id="link-agendamento" class="f" readonly aria-label="Link público de agendamento"><button class="btn" type="button" id="copiar-link-agendamento">Copiar link</button><a class="btn sec" id="abrir-link-agendamento" target="_blank" rel="noopener">Visualizar</a></div>
+    <p class="lab" style="margin-bottom:0">Este bloco só aparece quando a opção “Trabalho com agendamento de horários” estiver ativada nas configurações.</p>
+  </section>
   <section class="card hero gate" aria-label="Lucro">
     <p class="lab">Lucro</p><p class="num big ok" id="luc">-</p>
     <div class="mini">

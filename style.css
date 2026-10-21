@@ -149,3 +149,18 @@ body:has(#tela-convite:not([hidden])) .pole{position:fixed;top:0;left:0;right:0;
   .card{padding:16px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Link público e formulário de agendamento */
+.booking-link-card{border-color:rgba(227,59,67,.45);background:linear-gradient(125deg,rgba(227,59,67,.08),rgba(52,120,200,.08)),var(--card)}
+.booking-link-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.booking-link-row .f{flex:1;min-width:220px;margin:0}
+.public-booking{min-height:calc(100vh - 7px);padding:24px 14px 48px;background:radial-gradient(ellipse at top left,rgba(52,120,200,.16),transparent 45%),radial-gradient(ellipse at bottom right,rgba(227,59,67,.15),transparent 45%),var(--bg)}
+.public-booking-card{width:min(100%,520px);margin:18px auto;padding:clamp(20px,5vw,34px)}
+.public-brand{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.public-brand img{width:68px;height:68px;object-fit:cover;border-radius:16px;border:1px solid var(--red)}
+.public-brand h1{font-size:clamp(24px,5vw,34px);margin:0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--red);margin:0 0 5px}
+.public-summary{padding:12px;border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:10px;margin:12px 0;font-weight:600}
+.public-foot{margin-top:18px;text-align:center}
+.success-message{color:var(--ok);font-weight:700;margin:14px 0}
+@media(max-width:540px){.booking-link-row{align-items:stretch}.booking-link-row .btn{width:100%;text-align:center}.public-brand img{width:54px;height:54px}}
