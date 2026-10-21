@@ -2,7 +2,7 @@
 // Cole aqui os dados do seu projeto no Supabase (Project Settings > API).
 // A chave pública (anon/publishable) pode ficar aqui: a segurança está nas regras do banco (supabase.sql).
 const SUPABASE_URL = 'https://qiwjxoymaccslovinfgx.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_wI9HINvYa3vAKvKABdr3NQ_xSH_MZSI';
+const SUPABASE_KEY = 'ublishable_wI9HINvYa3vAKvKABdr3NQ_xSH_MZSI';
 // ============================================================
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -319,23 +319,50 @@ $('#chm').addEventListener('click', e => {
   });
 });
 
+// Clientes já cadastrados: usados para preencher nome e telefone no novo atendimento.
+let CLIENTES_AT = [];
+async function carregarClientesAtendimento() {
+  CLIENTES_AT = await sb.from('cliente').select('id,nome,telefone').order('nome').limit(1000).then(ok);
+  const sel = $('#at-cliente-existente');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Novo cliente — preencher os dados abaixo</option>' +
+    CLIENTES_AT.map(c => `<option value="${c.id}">${esc(c.nome)} — ${esc(c.telefone)}</option>`).join('');
+  if (CLIENTES_AT.some(c => String(c.id) === atual)) sel.value = atual;
+}
+$('#at-cliente-existente').addEventListener('change', () => {
+  const c = CLIENTES_AT.find(x => String(x.id) === $('#at-cliente-existente').value);
+  if (!c) return;
+  $('#at-n').value = c.nome;
+  $('#at-t').value = c.telefone;
+  $('#at-cliente-ajuda').textContent = 'Dados preenchidos a partir do cadastro do cliente. Você pode editá-los se necessário.';
+});
+['at-n', 'at-t'].forEach(id => $('#' + id).addEventListener('input', () => {
+  // Se os dados forem alterados manualmente, limpa a seleção para evitar confusão.
+  const sel = $('#at-cliente-existente');
+  if (sel.value) sel.value = '';
+  $('#at-cliente-ajuda').textContent = 'Selecione um cliente salvo para preencher nome e telefone automaticamente.';
+}));
+
 // Novo atendimento
 function totalAt() {
   const s = SERV.find(x => String(x.id) === $('#at-s').value), d = Math.min(Math.max(Number($('#at-d').value) || 0, 0), s ? Number(s.preco) : 0);
   $('#at-tot').textContent = brl(s ? Number(s.preco) - d : 0);
 }
 $('#novo').addEventListener('click', () => seguro(async () => {
-  await carregarServicos();
+  await Promise.all([carregarServicos(), carregarClientesAtendimento()]);
   if (!SERV.length) { toast('Cadastre ao menos um serviço antes, na aba Serviços.', true); aba('servicos'); return; }
   $('#at-s').innerHTML = SERV.map(s => `<option value="${s.id}">${esc(s.nome)} (${brl(s.preco)})</option>`).join('');
-  $('#at-f').innerHTML = opcoes(FORMAS); $('#at-err').textContent = ''; totalAt(); $('#dAt').showModal();
+  $('#at-f').innerHTML = opcoes(FORMAS); $('#at-err').textContent = '';
+  $('#at-cliente-existente').value = ''; $('#at-n').value = ''; $('#at-t').value = '';
+  $('#at-cliente-ajuda').textContent = 'Selecione um cliente salvo para preencher nome e telefone automaticamente.';
+  totalAt(); $('#dAt').showModal();
 }));
 ['at-s', 'at-d'].forEach(i => $('#' + i).addEventListener('input', totalAt));
 $('#fAt').addEventListener('submit', async e => {
   e.preventDefault(); $('#at-err').textContent = '';
   try {
     await rpc('registrar_atendimento', {p_nome: $('#at-n').value, p_telefone: $('#at-t').value, p_servico: Number($('#at-s').value), p_desconto: Number($('#at-d').value) || 0, p_forma: $('#at-f').value});
-    $('#dAt').close(); $('#fAt').reset(); toast('Atendimento salvo.'); tudoDoPainel();
+    $('#dAt').close(); $('#fAt').reset(); $('#at-cliente-ajuda').textContent = 'Selecione um cliente salvo para preencher nome e telefone automaticamente.'; toast('Atendimento salvo.'); tudoDoPainel();
   } catch (x) { $('#at-err').textContent = x.message; }
 });
 
@@ -499,7 +526,7 @@ $('#fNova').addEventListener('submit', async e => {
 $('#cred-copiar').addEventListener('click', async () => { try { await navigator.clipboard.writeText(MENSAGEM); toast('Mensagem copiada.'); } catch (er) { toast('Não foi possível copiar.', true); } });
 $('#a-sair').addEventListener('click', sair);
 
-// ======================= INÍCIO ========================
+// ======================= INÍCIO =======================
 (function inicio() {
   const conv = new URLSearchParams(location.search).get('convite');
   if (conv) { guarda('convite', conv); $('#cd-c').value = conv; document.querySelector('[data-lt="cadastro"]').click(); }

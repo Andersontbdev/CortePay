@@ -149,8 +149,13 @@
 <button class="fab" id="novo" type="button">Novo atendimento</button>
 <dialog id="dAt"><h2>Novo atendimento</h2>
 <form id="fAt">
-  <label class="lab" for="at-n">Cliente</label><input id="at-n" class="f" required>
-  <label class="lab" for="at-t">Telefone (com DDD)</label><input id="at-t" class="f" type="tel" placeholder="(11) 91234-5678" required>
+  <label class="lab" for="at-cliente-existente">Cliente cadastrado</label>
+  <select id="at-cliente-existente" class="f">
+    <option value="">Novo cliente — preencher os dados abaixo</option>
+  </select>
+  <p class="lab" id="at-cliente-ajuda">Selecione um cliente salvo para preencher nome e telefone automaticamente.</p>
+  <label class="lab" for="at-n">Nome do cliente</label><input id="at-n" class="f" autocomplete="name" required>
+  <label class="lab" for="at-t">Telefone (com DDD)</label><input id="at-t" class="f" type="tel" autocomplete="tel" placeholder="(11) 91234-5678" required>
   <label class="lab" for="at-s">Serviço</label><select id="at-s" class="f"></select>
   <label class="lab" for="at-f">Pagamento</label><select id="at-f" class="f"></select>
   <label class="lab" for="at-d">Desconto (R$)</label><input id="at-d" class="f" type="number" min="0" step="0.01" value="0">
