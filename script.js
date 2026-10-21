@@ -499,7 +499,7 @@ $('#fNova').addEventListener('submit', async e => {
 $('#cred-copiar').addEventListener('click', async () => { try { await navigator.clipboard.writeText(MENSAGEM); toast('Mensagem copiada.'); } catch (er) { toast('Não foi possível copiar.', true); } });
 $('#a-sair').addEventListener('click', sair);
 
-// ======================= INÍCIO =======================
+// ======================= INÍCIO ========================
 (function inicio() {
   const conv = new URLSearchParams(location.search).get('convite');
   if (conv) { guarda('convite', conv); $('#cd-c').value = conv; document.querySelector('[data-lt="cadastro"]').click(); }
