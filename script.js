@@ -187,9 +187,37 @@ async function painel() {
 
 async function recentes() {
   if (INFO.restrito) return;
-  const l = await sb.from('atendimento').select('valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
-  $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b></div>`).join('') : vazio('Nenhum atendimento ainda.');
+  const l = await sb.from('atendimento').select('id,valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
+  $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b><button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="ENTRADA" data-id="${a.id}" aria-label="Excluir entrada de ${esc(a.cliente?.nome || 'cliente')}">Excluir</button></div>`).join('') : vazio('Nenhum atendimento ainda.');
 }
+
+// Excluir entradas (atendimentos) e saídas (gastos) com confirmação.
+// A exclusão é feita por uma função SQL que valida a barbearia vinculada ao usuário.
+async function excluirLancamento(tipo, id) {
+  const ehEntrada = tipo === 'ENTRADA';
+  const pergunta = ehEntrada
+    ? 'Deseja realmente excluir esta entrada? Se ela veio de um agendamento, o horário relacionado também será cancelado.'
+    : 'Deseja realmente excluir esta saída/gasto?';
+  if (!confirm(pergunta)) return;
+  await rpc('excluir_lancamento', {p_tipo: tipo, p_id: Number(id)});
+  toast(ehEntrada ? 'Entrada excluída.' : 'Saída excluída.');
+  if (ehEntrada) {
+    tudoDoPainel();
+    seguro(agenda);
+  } else {
+    await gastos();
+    seguro(painel);
+  }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.btn-excluir-lancamento');
+  if (!b) return;
+  b.disabled = true;
+  seguro(async () => {
+    try { await excluirLancamento(b.dataset.tipo, b.dataset.id); }
+    finally { b.disabled = false; }
+  });
+});
 
 async function ranking() {
   const [i0, i1] = intervalo(PER);
@@ -319,8 +347,8 @@ async function servicos() {
 }
 async function gastos() {
   if (INFO.restrito) { $('#gs').innerHTML = vazio('Você pode lançar gastos normalmente. A lista fica disponível após o pagamento da mensalidade.'); return; }
-  const l = await sb.from('despesa').select('descricao,categoria,valor,data_despesa').order('data_despesa', {ascending: false}).order('id', {ascending: false}).limit(20).then(ok);
-  $('#gs').innerHTML = l.length ? l.map(d => `<div class="row2"><div class="who"><b>${esc(d.descricao)}</b><small>${esc(CATS[d.categoria] || d.categoria)}, ${dataBR(d.data_despesa)}</small></div><b>${brl(d.valor)}</b></div>`).join('') : vazio('Nenhum gasto lançado ainda.');
+  const l = await sb.from('despesa').select('id,descricao,categoria,valor,data_despesa').order('data_despesa', {ascending: false}).order('id', {ascending: false}).limit(20).then(ok);
+  $('#gs').innerHTML = l.length ? l.map(d => `<div class="row2"><div class="who"><b>${esc(d.descricao)}</b><small>${esc(CATS[d.categoria] || d.categoria)}, ${dataBR(d.data_despesa)}</small></div><b>${brl(d.valor)}</b><button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="SAIDA" data-id="${d.id}" aria-label="Excluir gasto ${esc(d.descricao)}">Excluir</button></div>`).join('') : vazio('Nenhum gasto lançado ainda.');
 }
 
 // ---------- Navegação e eventos ----------
