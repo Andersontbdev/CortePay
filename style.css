@@ -211,3 +211,35 @@ body:has(#tela-convite:not([hidden])) .pole{position:fixed;top:0;left:0;right:0;
   -webkit-text-fill-color: #1f1b16 !important;
   caret-color: #1f1b16;
 }
+/* Login legível em qualquer tela e com modo escuro do celular */
+:root { color-scheme: only light; }
+
+html body .tela-login input,
+html body .tela-login input:focus {
+  background: #ffffff !important;
+  color: #1f1b16 !important;
+  -webkit-text-fill-color: #1f1b16 !important;
+  caret-color: #1f1b16;
+  border: 1px solid #d6cdbf !important;
+  opacity: 1 !important;
+}
+html body .tela-login input::placeholder {
+  color: #8a8076 !important;
+  -webkit-text-fill-color: #8a8076 !important;
+}
+html body .tela-login input:-webkit-autofill,
+html body .tela-login input:-webkit-autofill:hover,
+html body .tela-login input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #1f1b16 !important;
+}
+
+/* Títulos e textos sobre a imagem escura (ex.: "Seja bem-vindo") */
+html body .tela-login h1,
+html body .tela-login h2,
+html body .tela-login h3,
+html body .tela-login p,
+html body .tela-login label {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+}
