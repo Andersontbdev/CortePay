@@ -190,55 +190,28 @@ body:has(#tela-convite:not([hidden])) .pole{position:fixed;top:0;left:0;right:0;
 @media(max-width:820px){.admin-kpis .q{grid-column:span 6}}
 @media(max-width:480px){.admin-kpis .q{grid-column:span 12}.admin-num{font-size:27px}}
 
-/* Login: campos sempre legíveis, mesmo com imagem escura de fundo */
-.tela-login input {
-  background: #ffffff !important;
-  color: #1f1b16 !important;
-  -webkit-text-fill-color: #1f1b16;
-  caret-color: #1f1b16;
-  border: 1px solid #d6cdbf;
-  color-scheme: light;
+/* Login: quadro escuro com textos claros (PC e celular) */
+.login-card h1 {
+  color: #ffffff !important;
 }
-.tela-login input::placeholder {
-  color: #8a8076;
-  -webkit-text-fill-color: #8a8076;
+.login-card .f,
+.login-card input {
+  background: rgba(255, 255, 255, .08) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, .28) !important;
 }
-/* Quando o navegador preenche o login sozinho (Chrome/Edge) */
-.tela-login input:-webkit-autofill,
-.tela-login input:-webkit-autofill:hover,
-.tela-login input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
-  -webkit-text-fill-color: #1f1b16 !important;
-  caret-color: #1f1b16;
+.login-card input::placeholder {
+  color: rgba(255, 255, 255, .5) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, .5) !important;
 }
-/* Login legível no PC e no celular, mesmo com tema escuro */
-#tela-login .login-card {
-  background: rgba(255, 255, 255, .96) !important;
-  color: #1f1b16 !important;
+.login-card input:-webkit-autofill,
+.login-card input:-webkit-autofill:hover,
+.login-card input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #1a212c inset !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
-#tela-login .login-card h1,
-#tela-login .login-card label,
-#tela-login .login-card .lab,
-#tela-login .login-card p {
-  color: #1f1b16 !important;
-  text-shadow: none !important;
-}
-#tela-login .login-card .sub { color: #5c544b !important; }
-
-#tela-login .login-card input,
-#tela-login .login-card .f {
-  background: #ffffff !important;
-  color: #1f1b16 !important;
-  -webkit-text-fill-color: #1f1b16 !important;
-  caret-color: #1f1b16;
-  border: 1px solid #d6cdbf !important;
-}
-#tela-login .login-card input::placeholder {
-  color: #8a8076 !important;
-  -webkit-text-fill-color: #8a8076 !important;
-}
-#tela-login .login-card input:-webkit-autofill,
-#tela-login .login-card input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
-  -webkit-text-fill-color: #1f1b16 !important;
+.login-card a {
+  color: #9ec5ff !important;
 }
