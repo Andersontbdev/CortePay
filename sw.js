@@ -1,8 +1,8 @@
 // CortePay: permite instalar como app e abrir a tela mesmo com internet instável.
 // Sempre busca a versão mais nova; a cópia guardada só é usada quando a rede falha.
 // Dados (Supabase) nunca passam por aqui: vão direto para a internet.
-const CACHE = 'cortepay-v6';
-const BASE = ['/', '/index.html', '/style.css?v=6', '/script.js?v=6', '/manifest.webmanifest',
+const CACHE = 'cortepay-v7';
+const BASE = ['/', '/index.html', '/style.css?v=7', '/script.js?v=7', '/manifest.webmanifest',
   '/icones/icone-192.png', '/icones/icone-512.png', '/icones/favicon-64.png'];
 
 self.addEventListener('install', e => {

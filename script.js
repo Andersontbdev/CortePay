@@ -135,8 +135,50 @@ async function entrar() {
   tela('tela-app');
   const [b, s] = await Promise.all([sb.from('barbearia').select('id,nome,logo,vencimento,usa_agendamento,abre,fecha,fidelidade_meta').maybeSingle().then(ok), rpc('minha_situacao')]);
   INFO = {...b, restrito: s[0].restrito, situacao: s[0].situacao};
+  await carregarPlano();
   tudoDoPainel();
 }
+
+// ---------- Plano (Free/Pro) e recursos liberados ----------
+const RECURSOS_INFO = {
+  agenda: ['Agenda e agendamento online', 'Seus clientes marcam pelo link, e a agenda evita horário duplicado.'],
+  barbeiros: ['Barbeiros e comissões', 'Cada atendimento com o barbeiro certo e a comissão calculada sozinha, com vales e fechamento.'],
+  estoque: ['Estoque e venda de produtos', 'Controle de produtos de uso e de venda, com aviso de estoque baixo e venda junto com o atendimento.'],
+  caixa: ['Caixa do dia', 'Abertura, sangrias e fechamento com a conferência do dinheiro na gaveta.'],
+  clube: ['Clube de assinatura', 'Planos mensais para seus clientes: receita garantida todo mês.'],
+  fidelidade: ['Programa de fidelidade', 'A cada tantos atendimentos, o próximo é por conta da casa.'],
+  marketing: ['Lembretes e aniversariantes', 'Lembretes dos horários de amanhã, parabéns no aniversário e clientes para chamar de volta.'],
+  relatorios: ['Relatórios', 'Faturamento, horários de pico, desempenho por barbeiro, faltas e produtos mais vendidos.'],
+};
+const RECURSO_DA_PAGINA = {agenda: 'agenda', caixa: 'caixa', clube: 'clube', barbeiros: 'barbeiros', estoque: 'estoque', relatorios: 'relatorios'};
+let PLANO = {plano: 'PRO', recursos: Object.keys(RECURSOS_INFO), recursos_pro: Object.keys(RECURSOS_INFO), preco_pro: null, whatsapp_vendas: null};
+const tem = r => PLANO.recursos.includes(r);
+async function carregarPlano() {
+  // Se a atualização 4 ainda não foi instalada, tudo continua liberado como antes
+  try { PLANO = await rpc('meus_recursos'); } catch (e) { /* mantém o padrão */ }
+  document.querySelectorAll('#tabs .tag-pro').forEach(t => t.remove());
+  Object.entries(RECURSO_DA_PAGINA).forEach(([pag, rec]) => {
+    if (!tem(rec)) $(`#tabs [data-t="${pag}"]`)?.insertAdjacentHTML('beforeend', '<span class="tag-pro">Pro</span>');
+  });
+  [['#atalho-horario', 'agenda'], ['[data-atalho="vender"]', 'estoque'], ['[data-atalho="caixa"]', 'caixa'], ['[data-atalho="clube"]', 'clube']]
+    .forEach(([sel, rec]) => { if (!tem(rec)) $(sel).hidden = true; });
+  ['#card-lembretes', '#card-aniver', '#card-chamar', '#card-resultado'].forEach(sel => { if (!tem('marketing')) $(sel).hidden = true; });
+  $('#cf-fid').closest('label').hidden = !tem('fidelidade'); if (!tem('fidelidade')) $('#cf-fid-box').hidden = true;
+  $('#cf-a').closest('label').hidden = !tem('agenda');
+}
+function mostrarUpgrade(pag) {
+  const rec = RECURSO_DA_PAGINA[pag], [titulo, desc] = RECURSOS_INFO[rec];
+  $('#pro-tit').textContent = titulo + ' é do plano Pro';
+  $('#pro-desc').textContent = desc;
+  $('#pro-lista').innerHTML = PLANO.recursos_pro.filter(r => !tem(r)).map(r =>
+    `<li class="${r === rec ? 'atual' : ''}"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>${esc(RECURSOS_INFO[r]?.[0] || r)}</span></li>`).join('');
+  $('#pro-preco').innerHTML = PLANO.preco_pro ? `Tudo isso por <b>${brl(PLANO.preco_pro)}</b> por mês` : '';
+  const wa = PLANO.whatsapp_vendas;
+  $('#pro-quero').hidden = !wa;
+  if (wa) $('#pro-quero').href = `https://wa.me/${whats(wa)}?text=${encodeURIComponent(`Olá! Sou da ${INFO.nome} e quero mudar para o plano Pro do CortePay (vi o recurso: ${titulo}).`)}`;
+  $('#pro-desc').textContent = desc + (wa ? '' : ' Fale com quem te vendeu o sistema para mudar para o Pro.');
+}
+$('#pro-voltar').addEventListener('click', () => aba('painel'));
 
 // ======================= BARBEARIA =======================
 let INFO, PER = 'semana', SERV = [], ATR = [], DIA = hojeISO(), CONCLUIR = null, NOVALOGO = null, AGENDA = [];
@@ -153,19 +195,25 @@ function marca() {
   const per = {hoje: 'de hoje', semana: 'da semana', mes: 'do mês'}[PER];
   $('#saldo-rot').textContent = 'Lucro ' + per;
   if (ABA === 'painel') $('#sub').textContent = 'Resumo ' + per;
-  $('#tab-ag').hidden = !INFO.usa_agendamento;
-  $('#atalho-horario').hidden = !INFO.usa_agendamento;
-  // Na barra inferior, sem agenda o espaço vai para o Clube
-  const bnAg = $('#bn-ag'), alvo = INFO.usa_agendamento ? 'agenda' : 'clube';
-  bnAg.dataset.t = alvo;
-  bnAg.innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${INFO.usa_agendamento ? 'cal' : 'crown'}"/></svg><span>${INFO.usa_agendamento ? 'Agenda' : 'Clube'}</span>`;
-  $('#card-link-agendamento').hidden = !INFO.usa_agendamento;
+  const agendaOk = tem('agenda') && INFO.usa_agendamento;
+  $('#tab-ag').hidden = tem('agenda') && !INFO.usa_agendamento;   // sem o recurso, aparece com o selo Pro
+  $('#atalho-horario').hidden = !agendaOk;
+  // Barra inferior: só atalhos que a barbearia pode usar
+  const slot = (el, opcoes) => {
+    const [t, ic, nome] = opcoes.find(o => o[3]);
+    el.dataset.t = t; el.innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${ic}"/></svg><span>${nome}</span>`;
+  };
+  slot($('#bn-ag'), [['agenda', 'cal', 'Agenda', agendaOk], ['clube', 'crown', 'Clube', tem('clube')], ['gastos', 'receipt', 'Gastos', true]]);
+  slot($('#bn-cx'), [['caixa', 'cash', 'Caixa', tem('caixa')], ['servicos', 'scissors', 'Serviços', true]]);
+  $('#card-link-agendamento').hidden = !agendaOk;
   if (INFO.usa_agendamento) { const url = location.origin + location.pathname + '?agendar=' + encodeURIComponent(INFO.id); $('#link-agendamento').value = url; $('#abrir-link-agendamento').href = url; }
   document.body.classList.toggle('restr', INFO.restrito);
   const ban = $('#ban');
   ban.hidden = !(INFO.restrito || INFO.situacao === 'ATRASADA');
   ban.className = 'ban' + (INFO.restrito ? '' : ' warn');
-  ban.innerHTML = INFO.restrito
+  ban.innerHTML = INFO.restrito && INFO.situacao === 'RESTRITO' && PLANO.plano === 'FREE'
+    ? '<b>Acesso restrito.</b> Os painéis de ganhos, gastos e lucro estão bloqueados pelo administrador do sistema. Você continua lançando normalmente.'
+    : INFO.restrito
     ? '<b>Mensalidade em atraso.</b> Você continua lançando atendimentos e gastos normalmente, mas os painéis de ganhos, gastos e lucro ficam bloqueados até o pagamento. Fale com o administrador para regularizar.'
     : '<b>Sua mensalidade está atrasada.</b> Regularize para não perder a visualização dos painéis.';
 }
@@ -329,7 +377,7 @@ async function resultado() {
   const ult = itens.sort((a, b) => b.c.enviado_em.localeCompare(a.c.enviado_em)).slice(0, 5);
   $('#ms').innerHTML = ult.length ? ult.map(u => `<div class="row2"><span class="av">${esc((nomes[u.c.cliente_id] || '?')[0])}</span><div class="who"><b>${esc(nomes[u.c.cliente_id])}</b><small>${esc(u.c.promocao)}</small></div><span class="chip">${sit[u.s]}${u.d != null ? ' em ' + u.d + ' dias' : ''}</span></div>`).join('') : vazio('Nenhuma mensagem enviada.');
 }
-function tudoDoPainel() { marca(); [painel, recentes, ranking, atrasados, resultado, carregarBase, lembretes, aniversariantes].forEach(f => seguro(f)); }
+function tudoDoPainel() { marca(); [painel, recentes, ranking, carregarBase].concat(tem('marketing') ? [atrasados, resultado, lembretes, aniversariantes] : []).forEach(f => seguro(f)); }
 
 // ---------- Agenda ----------
 async function agenda() {
@@ -402,14 +450,17 @@ function aba(nome) {
   ABA = nome;
   document.querySelectorAll('#tabs [data-t], #bottom-nav [data-t]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === nome)));
   $('#bn-mais').setAttribute('aria-pressed', String(!document.querySelector(`#bottom-nav [data-t="${nome}"]`)));
-  Object.keys(PAGINAS).forEach(n => $('#v-' + n).hidden = n !== nome);
+  const travada = RECURSO_DA_PAGINA[nome] && !tem(RECURSO_DA_PAGINA[nome]);
+  Object.keys(PAGINAS).forEach(n => $('#v-' + n).hidden = travada || n !== nome);
+  $('#v-pro').hidden = !travada;
+  if (travada) mostrarUpgrade(nome);
   $('#page-title').textContent = PAGINAS[nome][0];
   $('#sub').textContent = nome === 'painel' ? 'Resumo ' + {hoje: 'de hoje', semana: 'da semana', mes: 'do mês'}[PER] : PAGINAS[nome][1];
   $('#per').hidden = nome !== 'painel';
   fecharMenu();
   window.scrollTo({top: 0});
   const carregar = {agenda, servicos, gastos, barbeiros, estoque, caixa, clube, relatorios}[nome];
-  if (carregar) seguro(carregar);
+  if (carregar && !travada) seguro(carregar);
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) aba(b.dataset.t); });
 $('#bottom-nav').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) aba(b.dataset.t); });
@@ -648,6 +699,8 @@ async function carregarBase() {
   [BARB, PROD] = await Promise.all([
     sb.from('barbeiro').select('id,nome,telefone,comissao_servico,comissao_produto,ativo').order('nome').then(ok),
     sb.from('produto').select('id,nome,tipo,unidade,custo,preco_venda,estoque,estoque_minimo,ativo').order('nome').then(ok)]);
+  if (!tem('barbeiros')) BARB = [];
+  if (!tem('estoque')) PROD = [];
   const baixo = PROD.filter(p => p.ativo && Number(p.estoque) <= Number(p.estoque_minimo));
   $('#card-estoque-baixo').hidden = !baixo.length;
   $('#estoque-baixo').innerHTML = baixo.map(p => `<div class="row2"><div class="who"><b>${esc(p.nome)}</b><small>${esc(TIPOS_PROD[p.tipo])}</small></div><span class="chip red">${qtd(p.estoque)} ${esc(p.unidade)} (mínimo ${qtd(p.estoque_minimo)})</span><button class="btn sec sm" type="button" data-ir-estoque>Ver estoque</button></div>`).join('');
@@ -1007,7 +1060,7 @@ async function atualizarBenef(k, args) {
 // ---------- Lembretes dos horários de amanhã ----------
 async function lembretes() {
   const card = $('#card-lembretes');
-  if (!INFO.usa_agendamento) { card.hidden = true; return; }
+  if (!INFO.usa_agendamento || !tem('agenda') || !tem('marketing')) { card.hidden = true; return; }
   const am = maisDia(hojeISO(), 1);
   const l = await sb.from('agendamento').select('id,inicio,lembrete_em,cliente(nome,telefone),servico(nome),barbeiro(nome)')
     .eq('status', 'AGENDADO').gte('inicio', am + 'T00:00:00').lt('inicio', maisDia(am, 1) + 'T00:00:00').order('inicio').then(ok);
@@ -1267,12 +1320,14 @@ $('#instalar').addEventListener('click', async () => {
 
 // ======================= ADMINISTRAÇÃO (só acesso e cobrança) =======================
 let LISTA = [], MENSAGEM = '', HIST_PAGAMENTOS = [], EVOLUCAO = [], AQUISICOES_PAGAS = new Set();
-const TAXA_AQUISICAO = 99.90, MENSALIDADE_OFICIAL = 24.90;
-const dinheiro = () => MENSALIDADE_OFICIAL;
-$('#pix').value = guarda('pix') || ''; $('#val').value = MENSALIDADE_OFICIAL.toFixed(2); $('#val').readOnly = true;
+const TAXA_AQUISICAO = 99.90;
+let PRECO_PRO = 24.90, PLANOS_CFG = null;
+const dinheiro = () => PRECO_PRO;
+$('#pix').value = guarda('pix') || ''; $('#val').value = PRECO_PRO.toFixed(2); $('#val').readOnly = true;
 const rotulo = b => {
   switch (b.situacao) {
-    case 'TESTE': return ['blue', 'Em teste: ' + Math.max(0, -b.dias_atraso) + ' dias restantes'];
+    case 'FREE': return ['', 'Plano Free'];
+    case 'TESTE': return ['blue', 'Pro em teste: ' + Math.max(0, -b.dias_atraso) + ' dias restantes'];
     case 'EM_DIA': return ['ok', 'Em dia'];
     case 'VENCE_EM_BREVE': return ['warn', b.dias_atraso === 0 ? 'Vence hoje' : 'Vence em breve'];
     case 'ATRASADA': return ['red', 'Atrasada ' + b.dias_atraso + (b.dias_atraso === 1 ? ' dia' : ' dias')];
@@ -1280,26 +1335,28 @@ const rotulo = b => {
   }
 };
 const msgCobranca = b => { const at = b.dias_atraso > 0; return `Olá, ${b.nome}! Sua mensalidade do sistema (${brl(dinheiro())}) ${at ? 'venceu' : 'vence'} em ${dataBR(b.vencimento)}. Para pagar via Pix, use a chave: ${$('#pix').value.trim()}. Depois de pagar, responda aqui com o comprovante.${at ? ' Lembrete: após 7 dias de atraso, os painéis de ganhos e gastos ficam bloqueados. Os lançamentos continuam normais.' : ''} Obrigado!`; };
-const msgConvite = b => `Olá! Seu acesso ao sistema da ${b.nome} está liberado. Abra ${location.origin + location.pathname}?convite=${b.convite}, toque em "Criar conta" e use o e-mail e a senha que você escolher. O código de convite já vem preenchido (${b.convite}). Você tem 15 dias de teste grátis.`;
+const msgConvite = b => `Olá! Seu acesso ao sistema da ${b.nome} está liberado. Abra ${location.origin + location.pathname}?convite=${b.convite}, toque em "Criar conta" e use o e-mail e a senha que você escolher. O código de convite já vem preenchido (${b.convite}).${b.plano === 'PRO' ? (b.dias_teste ? ` Você tem ${b.dias_teste} dias de teste grátis do plano Pro.` : ' Seu plano é o Pro.') : ' Seu plano é o Free (gratuito).'}`;
 function admDesenhar() {
-  const c = {EM_DIA: 0, TESTE: 0, VENCE_EM_BREVE: 0, ATRASADA: 0, RESTRITO: 0}; let pend = 0;
+  const c = {FREE: 0, EM_DIA: 0, TESTE: 0, VENCE_EM_BREVE: 0, ATRASADA: 0, RESTRITO: 0}; let pend = 0;
   $('#lista').innerHTML = LISTA.length ? LISTA.map(b => {
     c[b.situacao]++;
-    const [cor, texto] = rotulo(b), teste = b.situacao === 'TESTE', cobrar = ['VENCE_EM_BREVE', 'ATRASADA', 'RESTRITO'].includes(b.situacao);
-    if (b.ativada && !teste && b.dias_atraso >= 0 && !b.nao_pago && !b.restricao_manual) pend++;
+    const pro = b.plano !== 'FREE';
+    const [cor, texto] = rotulo(b), teste = b.situacao === 'TESTE', cobrar = pro && ['VENCE_EM_BREVE', 'ATRASADA', 'RESTRITO'].includes(b.situacao);
+    if (pro && b.ativada && !teste && b.dias_atraso >= 0 && !b.nao_pago && !b.restricao_manual) pend++;
     return `<div class="row2" data-id="${b.id}">
       <span class="av">${esc((b.nome.trim()[0] || '?'))}</span>
-      <div class="who"><b>${esc(b.nome)}</b><small>${teste ? 'teste até ' : 'vencimento '}${dataBR(b.vencimento)}${b.nao_pago ? '. Marcado como não pago.' : ''}${b.ativada ? '' : '. Aguardando o dono criar a conta.'}</small></div>
-      <span class="chip ${cor}">${esc(texto)}</span>
+      <div class="who"><b>${esc(b.nome)}</b><small>${pro ? (teste ? 'teste até ' : 'vencimento ') + dataBR(b.vencimento) : 'Sem mensalidade'}${b.nao_pago ? '. Marcado como não pago.' : ''}${b.ativada ? '' : '. Aguardando o dono criar a conta.'}</small></div>
+      <span class="chip ${pro ? 'pro' : 'free'}">${pro ? 'Pro' : 'Free'}</span>${pro ? `<span class="chip ${cor}">${esc(texto)}</span>` : ''}
       <div class="acts">
         ${b.ativada ? '' : `<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(b.telefone))}?text=${encodeURIComponent(msgConvite(b))}">Enviar convite</a><button class="btn sec sm" data-a="copiar">Copiar convite</button>`}
         ${AQUISICOES_PAGAS.has(Number(b.id)) ? '<span class="chip ok">Implantação paga</span>' : `<button class="btn sec sm" data-a="aquisicao" title="Confirmar recebimento único de R$ 99,90">Confirmar implantação (R$ 99,90)</button>`}
-        ${teste ? '' : `<span class="lab">Mensalidade paga?</span><button class="btn sec sm" data-a="sim">Sim</button><button class="btn sec sm${b.nao_pago ? ' sel' : ''}" data-a="nao">Não</button>`}
+        ${teste || !pro ? '' : `<span class="lab">Mensalidade paga?</span><button class="btn sec sm" data-a="sim">Sim</button><button class="btn sec sm${b.nao_pago ? ' sel' : ''}" data-a="nao">Não</button>`}
+        <button class="btn sec sm" data-a="plano">${pro ? 'Mudar para Free' : 'Mudar para Pro'}</button>
         ${cobrar ? `<a class="wa" data-w="1" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(b.telefone))}?text=${encodeURIComponent(msgCobranca(b))}">Cobrar no WhatsApp</a>` : ''}
         <button class="btn sec sm" data-a="${b.restricao_manual ? 'liberar' : 'restringir'}">${b.restricao_manual ? 'Liberar visualização' : 'Restringir visualização'}</button>
       </div></div>`;
   }).join('') : vazio('Nenhuma barbearia cadastrada. Use "Nova barbearia".');
-  $('#m-o').textContent = c.EM_DIA + c.TESTE; $('#m-p').textContent = c.VENCE_EM_BREVE; $('#m-a').textContent = c.ATRASADA; $('#m-s').textContent = c.RESTRITO;
+  $('#m-f').textContent = c.FREE; $('#m-o').textContent = c.EM_DIA + c.TESTE; $('#m-p').textContent = c.VENCE_EM_BREVE; $('#m-a').textContent = c.ATRASADA; $('#m-s').textContent = c.RESTRITO;
   $('#pend').innerHTML = pend ? `<div class="pend">${pend} ${pend === 1 ? 'barbearia aguarda' : 'barbearias aguardam'} a sua confirmação de pagamento. Sem resposta em 7 dias após o vencimento, entram em modo restrito.</div>` : '';
 }
 function mesKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
@@ -1310,8 +1367,11 @@ function desenharBarrasAdmin(containerId, ticksId, values, formatMoney=false) {
   tx.innerHTML = values.map(x => `<span>${esc(x.label)}</span>`).join('');
 }
 function admDashboard() {
-  const mensalidade = MENSALIDADE_OFICIAL;
-  const ativas = LISTA.filter(b => ['EM_DIA','VENCE_EM_BREVE'].includes(b.situacao) && !b.em_teste && !b.restricao_manual).length;
+  const mensalidade = PRECO_PRO;
+  const ativas = LISTA.filter(b => b.plano !== 'FREE' && ['EM_DIA','VENCE_EM_BREVE'].includes(b.situacao) && !b.em_teste && !b.restricao_manual).length;
+  $('#ad-mrr-txt').textContent = `${ativas} ${ativas === 1 ? 'barbearia' : 'barbearias'} no Pro × ${brl(PRECO_PRO)}`;
+  $('#ad-mens-txt').textContent = `Plano Pro de ${brl(PRECO_PRO)}`;
+  $('#ad-modelo').textContent = `Implantação única de ${brl(TAXA_AQUISICAO)} + plano Pro de ${brl(PRECO_PRO)} por mês (Free é gratuito)`;
   const inad = LISTA.filter(b => ['ATRASADA','RESTRITO'].includes(b.situacao) || b.restricao_manual);
   const hoje = new Date(), mk = mesKey(hoje), meses = mesesUltimosSeis();
   const pagMes = HIST_PAGAMENTOS.filter(p => String(p.pago_em || '').slice(0,7) === mk);
@@ -1331,19 +1391,23 @@ function admDashboard() {
   $('#ad-ultimos-pagamentos').innerHTML = HIST_PAGAMENTOS.length ? HIST_PAGAMENTOS.slice(0,6).map(p=>`<div class="row2"><span class="av">✓</span><div class="who"><b>${esc(p.nome||'Barbearia')}</b><small>${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'Data não disponível'}</small></div><b>${brl(p.valor)}</b></div>`).join('') : vazio('Nenhum pagamento registrado ainda. As próximas confirmações aparecerão aqui.');
 }
 async function admCarregar() {
-  const [lista, pagamentos, evolucao, aquisicoes] = await Promise.all([
-    rpc('admin_listar'),
+  const [lista, pagamentos, evolucao, aquisicoes, planos] = await Promise.all([
+    rpc('admin_listar_v2').catch(() => rpc('admin_listar')),
     rpc('admin_pagamentos_listar_v2').catch(()=>rpc('admin_pagamentos_listar').catch(()=>[])),
     rpc('admin_evolucao_cadastros').catch(()=>[]),
-    rpc('admin_aquisicoes_listar').catch(()=>[])
+    rpc('admin_aquisicoes_listar').catch(()=>[]),
+    rpc('admin_planos').catch(() => null)
   ]);
+  PLANOS_CFG = planos;
+  if (planos) { PRECO_PRO = Number(planos.preco_pro); $('#val').value = PRECO_PRO.toFixed(2); desenharPlanos(); }
+  $('#card-planos').hidden = !planos;
   LISTA = lista || []; HIST_PAGAMENTOS = pagamentos || []; EVOLUCAO = evolucao || [];
   AQUISICOES_PAGAS = new Set((aquisicoes || []).map(x=>Number(x.barbearia_id))); 
   admDesenhar(); admDashboard();
 }
 $('#adm-atualizar').addEventListener('click', () => seguro(admCarregar));
 $('#pix').addEventListener('input', () => { guarda('pix', $('#pix').value.trim()); $('#err').textContent = ''; admDesenhar(); });
-$('#val').addEventListener('input', () => { $('#val').value = MENSALIDADE_OFICIAL.toFixed(2); });
+$('#val').addEventListener('input', () => { $('#val').value = PRECO_PRO.toFixed(2); });
 $('#lista').addEventListener('click', e => {
   const w = e.target.closest('a[data-w]');
   if (w) { if (!$('#pix').value.trim()) { e.preventDefault(); $('#err').textContent = 'Digite sua chave Pix acima antes de cobrar.'; $('#pix').focus(); } return; }
@@ -1354,24 +1418,68 @@ $('#lista').addEventListener('click', e => {
     if (a === 'aquisicao') { if (!confirm('Confirma que recebeu a taxa única de implantação de R$ 99,90 desta barbearia?')) return; await rpc('admin_confirmar_aquisicao', {p_id: id, p_valor: TAXA_AQUISICAO}); }
     else if (a === 'sim') await rpc('admin_confirmar_pagamento', {p_id: id, p_valor: dinheiro()});
     else if (a === 'nao') await rpc('admin_pagamento', {p_id: id, p_pago: false});
+    else if (a === 'plano') { abrirPlanoB(LISTA.find(y => y.id === id)); return; }
     else await rpc('admin_restricao', {p_id: id, p_restrito: a === 'restringir'});
     await admCarregar();
   });
 });
-$('#nova').addEventListener('click', () => { $('#n-err').textContent = ''; $('#dNova').showModal(); });
+$('#nova').addEventListener('click', () => { $('#n-err').textContent = ''; $('#n-p').value = 'FREE'; $('#n-dias-box').hidden = true; $('#dNova').showModal(); });
+$('#n-p').addEventListener('change', () => { $('#n-dias-box').hidden = $('#n-p').value !== 'PRO'; });
 $('#fNova').addEventListener('submit', async e => {
   e.preventDefault(); $('#n-err').textContent = '';
   try {
-    const cod = await rpc('admin_criar_barbearia', {p_nome: $('#n-n').value, p_telefone: $('#n-t').value});
+    const plano = $('#n-p').value, dias = Number($('#n-d').value) || 0;
+    const cod = PLANOS_CFG ? await rpc('admin_criar_barbearia_v2', {p_nome: $('#n-n').value, p_telefone: $('#n-t').value, p_plano: plano, p_dias_teste: dias})
+                           : await rpc('admin_criar_barbearia', {p_nome: $('#n-n').value, p_telefone: $('#n-t').value});
     const nome = $('#n-n').value.trim(), tel = $('#n-t').value;
     $('#dNova').close(); $('#fNova').reset(); await admCarregar();
-    MENSAGEM = msgConvite({nome, convite: cod});
+    MENSAGEM = msgConvite({nome, convite: cod, plano: PLANOS_CFG ? plano : 'PRO', dias_teste: PLANOS_CFG ? dias : 15});
     $('#cred').innerHTML = `<b>${esc(nome)}</b><br>Código de convite: <b>${esc(cod)}</b><br>O dono abre o endereço do sistema, toca em "Criar conta" e usa esse código.`;
     $('#cred-wa').href = `https://wa.me/${whats(tel)}?text=${encodeURIComponent(MENSAGEM)}`; $('#dCred').showModal();
   } catch (x) { $('#n-err').textContent = x.message; }
 });
 $('#cred-copiar').addEventListener('click', async () => { try { await navigator.clipboard.writeText(MENSAGEM); toast('Mensagem copiada.'); } catch (er) { toast('Não foi possível copiar.', true); } });
 $('#a-sair').addEventListener('click', sair);
+
+// ---------- Planos e recursos ----------
+function desenharPlanos() {
+  const nomes = {agenda: 'Agenda e agendamento online', barbeiros: 'Barbeiros e comissões', estoque: 'Estoque e venda de produtos', caixa: 'Caixa do dia',
+    clube: 'Clube de assinatura', fidelidade: 'Programa de fidelidade', marketing: 'Lembretes, aniversariantes e clientes para chamar', relatorios: 'Relatórios'};
+  const chave = (rec, pl, on) => `<label class="chave"><input type="checkbox" data-rec="${rec}" data-pl="${pl}"${on ? ' checked' : ''} aria-label="${esc(nomes[rec] || rec)} no plano ${pl === 'free' ? 'Free' : 'Pro'}"><span></span></label>`;
+  $('#matriz').innerHTML = `<table class="matriz"><thead><tr><th>Recurso</th><th>Free</th><th>Pro</th></tr></thead><tbody>${PLANOS_CFG.recursos.map(r =>
+    `<tr><td><b>${esc(nomes[r.recurso] || r.recurso)}</b></td><td>${chave(r.recurso, 'free', r.free)}</td><td>${chave(r.recurso, 'pro', r.pro)}</td></tr>`).join('')}
+    <tr><td><b>Atendimentos, serviços, gastos e painel</b><small>Sempre liberados</small></td><td>Sempre</td><td>Sempre</td></tr></tbody></table>`;
+  $('#preco-pro').value = Number(PLANOS_CFG.preco_pro).toFixed(2);
+  $('#wa-vendas').value = PLANOS_CFG.whatsapp_vendas || '';
+}
+$('#planos-salvar').addEventListener('click', async () => {
+  $('#planos-err').textContent = '';
+  const recursos = PLANOS_CFG.recursos.map(r => ({recurso: r.recurso,
+    free: $(`#matriz [data-rec="${r.recurso}"][data-pl="free"]`).checked, pro: $(`#matriz [data-rec="${r.recurso}"][data-pl="pro"]`).checked}));
+  if (recursos.some(r => r.free && !r.pro)) { $('#planos-err').textContent = 'Todo recurso liberado no Free precisa estar no Pro também.'; return; }
+  try {
+    await rpc('admin_planos_salvar', {p_preco_pro: Number($('#preco-pro').value), p_recursos: recursos, p_whatsapp: $('#wa-vendas').value});
+    toast('Planos salvos. As barbearias veem a mudança na próxima vez que abrirem o sistema.'); await admCarregar();
+  } catch (x) { $('#planos-err').textContent = x.message; }
+});
+let PLANO_B = null;
+function abrirPlanoB(b) {
+  PLANO_B = b; const praPro = b.plano === 'FREE';
+  $('#pb-tit').textContent = praPro ? 'Mudar para o Pro' : 'Mudar para o Free';
+  $('#pb-info').textContent = praPro
+    ? `${b.nome} passa a ter os recursos do Pro e a pagar ${brl(PRECO_PRO)} por mês.`
+    : `${b.nome} perde os recursos do Pro e deixa de ter mensalidade. Os dados ficam guardados e voltam se ela voltar ao Pro.`;
+  $('#pb-dias-box').hidden = !praPro; $('#pb-d').value = 0; $('#pb-err').textContent = '';
+  $('#dPlanoB').showModal();
+}
+$('#fPlanoB').addEventListener('submit', async e => {
+  e.preventDefault(); $('#pb-err').textContent = '';
+  try {
+    const praPro = PLANO_B.plano === 'FREE';
+    await rpc('admin_definir_plano', {p_id: PLANO_B.id, p_plano: praPro ? 'PRO' : 'FREE', p_dias_teste: Number($('#pb-d').value) || 0});
+    $('#dPlanoB').close(); toast(praPro ? `${PLANO_B.nome} agora é Pro.` : `${PLANO_B.nome} agora é Free.`); await admCarregar();
+  } catch (x) { $('#pb-err').textContent = x.message; }
+});
 
 // ======================= AGENDAMENTO PÚBLICO =======================
 let PUBLICO = null, PUBLIC_SERV = [];

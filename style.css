@@ -378,7 +378,7 @@ body:has(#tela-login:not([hidden])) .pole, body:has(#tela-convite:not([hidden]))
 /* ---------- Administração (mantém a estrutura antiga) ---------- */
 .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 100px; }
 .wrap > header { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
-.admin-kpis .q { grid-column: span 3; }
+.admin-kpis .q { grid-column: span 4; }
 .admin-num { font-size: clamp(22px, 2.4vw, 30px); margin: 6px 0; overflow-wrap: anywhere; }
 .admin-bars { margin-top: 18px; min-height: 150px; }
 #admin-dashboard > .grid > .card { min-width: 0; }
@@ -445,3 +445,37 @@ body:has(#tela-login:not([hidden])) .pole, body:has(#tela-convite:not([hidden]))
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* ===== Atualização 4: planos Free e Pro ===== */
+.kpis.cinco { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .kpis.cinco { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.matriz { width: 100%; border-collapse: collapse; font-size: 14px; }
+.matriz th { text-align: center; font-size: 13px; color: var(--mut); font-weight: 600; padding: 0 8px 8px; }
+.matriz th:first-child { text-align: left; padding-left: 0; }
+.matriz td { padding: 12px 8px; border-top: 1px solid var(--line); text-align: center; vertical-align: middle; }
+.matriz td:first-child { text-align: left; padding-left: 0; }
+.matriz td b { display: block; font-weight: 600; }
+.matriz td small { color: var(--mut); }
+.chave { position: relative; display: inline-block; width: 44px; height: 26px; }
+.chave input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 1; }
+.chave span { position: absolute; inset: 0; border-radius: 99px; background: var(--line-forte); transition: background-color .15s ease; }
+.chave span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .15s ease; }
+.chave input:checked + span { background: var(--ok); }
+.chave input:checked + span::after { transform: translateX(18px); }
+.chave input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 2px; }
+.tag-pro { margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: linear-gradient(135deg, var(--red), #8E1F18); color: #fff; letter-spacing: .02em; }
+.chip.pro { background: linear-gradient(135deg, var(--red), #8E1F18); color: #fff; }
+.chip.free { background: var(--track); color: var(--ink); }
+.upgrade { max-width: 620px; margin: 0 auto; text-align: center; padding: 36px 24px; }
+.upgrade .selo { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 18px; margin-bottom: 14px;
+  background: var(--navy); color: #fff; position: relative; overflow: hidden; }
+.upgrade .selo svg.i { width: 30px; height: 30px; }
+.upgrade h2 { font-size: 22px; margin-bottom: 8px; }
+.upgrade .lista-pro { text-align: left; margin: 20px auto; max-width: 420px; padding: 0; list-style: none; }
+.upgrade .lista-pro li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--line); }
+.upgrade .lista-pro li:first-child { border-top: 0; }
+.upgrade .lista-pro li.atual { font-weight: 700; }
+.upgrade .lista-pro svg.i { color: var(--ok); margin-top: 2px; }
+.upgrade .preco { font-size: 15px; color: var(--mut); margin: 4px 0 18px; }
+.upgrade .preco b { color: var(--ink); font-size: 28px; }
+.sel { background: color-mix(in srgb, var(--red) 14%, var(--surface)) !important; border-color: var(--red) !important; color: var(--red) !important; }
