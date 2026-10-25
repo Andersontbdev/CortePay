@@ -3,12 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sistema para barbearias</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=DM+Sans:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=5">
+<title>CortePay</title>
+<meta name="theme-color" content="#0E1A2B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icones/favicon-64.png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CortePay">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css?v=6">
 <meta name="color-scheme" content="only light">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-4"/><path d="M12 16V8"/><path d="M16 16v-6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5"/><path d="M18 9.5v5"/></symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24"><path d="M4 18h16"/><path d="M4 18 3 8l5 4 4-6 4 6 5-4-1 10"/></symbol>
+  <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.6"/><circle cx="6" cy="17" r="2.6"/><path d="M8.2 8.4 20 17"/><path d="M8.2 15.6 20 7"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M15.5 4.9a3.2 3.2 0 0 1 0 6.2"/><path d="M17.5 14.6c1.8.6 3 2.3 3.4 4.9"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="m3.5 7.5 8.5-4 8.5 4v9l-8.5 4-8.5-4z"/><path d="m3.5 7.5 8.5 4 8.5-4"/><path d="M12 11.5v9"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-2.9 3.6"/><path d="M6.6 6.7A15.6 15.6 0 0 0 2.5 12S6 18.5 12 18.5a9.3 9.3 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/><circle cx="9.5" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+</svg>
 <div class="pole" aria-hidden="true"></div>
 <main id="tela-login" class="card login-card" hidden>
   <h1>Bem-vindo</h1>
@@ -47,7 +79,7 @@
 
 <main id="tela-publico" class="public-booking" hidden>
   <section class="card public-booking-card">
-    <div class="public-brand"><img id="pub-logo" alt="Logotipo da barbearia" hidden><div><p class="eyebrow">AGENDAMENTO ONLINE</p><h1 id="pub-nome">Barbearia</h1><p class="sub" id="pub-horario"></p></div></div>
+    <div class="public-brand"><img id="pub-logo" alt="Logotipo da barbearia" hidden><div><p class="eyebrow">Agendamento online</p><h1 id="pub-nome">Barbearia</h1><p class="sub" id="pub-horario"></p></div></div>
     <p class="sub">Escolha o serviço, selecione um dia e horário disponível e confirme seu agendamento.</p>
     <form id="form-publico-agendamento">
       <label class="lab" for="pub-servico">Serviço</label><select id="pub-servico" class="f" required><option value="">Carregando serviços...</option></select>
@@ -69,44 +101,77 @@
   </section>
 </main>
 
-<div id="tela-app" hidden>
-<div class="wrap">
-<header>
-  <div class="brand">
-    <img id="logo" alt="Logotipo" hidden><span id="ini" class="ini" aria-hidden="true"></span>
-    <div><h1 id="bn"></h1><p class="sub" id="sub"></p></div>
+<div id="tela-app" class="app" hidden>
+<aside class="side" id="side" aria-label="Menu principal">
+  <div class="side-top">
+    <div class="brand">
+      <img id="logo" alt="Logotipo" hidden><span id="ini" class="ini" aria-hidden="true"></span>
+      <div class="brand-txt"><b id="bn"></b><small>CortePay</small></div>
+    </div>
+    <button class="icon-btn side-fechar" id="menu-fechar" type="button" aria-label="Fechar menu"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
   </div>
+  <nav class="nav" id="tabs" aria-label="Seções">
+    <p class="nav-grupo">Visão geral</p>
+    <button type="button" data-t="painel" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span>Início</span></button>
+    <button type="button" data-t="relatorios" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg><span>Relatórios</span></button>
+    <p class="nav-grupo">Dia a dia</p>
+    <button type="button" data-t="agenda" id="tab-ag" aria-pressed="false" hidden><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg><span>Agenda</span></button>
+    <button type="button" data-t="caixa" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-cash"/></svg><span>Caixa</span></button>
+    <button type="button" data-t="clube" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-crown"/></svg><span>Clube</span></button>
+    <p class="nav-grupo">Cadastros</p>
+    <button type="button" data-t="servicos" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-scissors"/></svg><span>Serviços</span></button>
+    <button type="button" data-t="barbeiros" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg><span>Barbeiros</span></button>
+    <button type="button" data-t="estoque" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-box"/></svg><span>Estoque</span></button>
+    <p class="nav-grupo">Financeiro</p>
+    <button type="button" data-t="gastos" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-receipt"/></svg><span>Gastos</span></button>
+  </nav>
+  <div class="side-foot">
+    <button class="side-link destaque" id="instalar" type="button" hidden><svg class="i" aria-hidden="true"><use href="#i-down"/></svg><span>Instalar o app</span></button>
+    <button class="side-link" id="tema-toggle" type="button" aria-pressed="false" aria-label="Ativar modo escuro"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg><span>Modo escuro</span></button>
+    <button class="side-link" id="cfg" type="button"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg><span>Configurar</span></button>
+    <button class="side-link" id="sair" type="button"><svg class="i" aria-hidden="true"><use href="#i-out"/></svg><span>Sair</span></button>
+  </div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+<div class="main">
+<header class="topbar">
+  <button class="icon-btn menu-abrir" id="menu-abrir" type="button" aria-label="Abrir menu" aria-controls="side"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+  <div class="topbar-tit"><h1 id="page-title">Início</h1><p class="sub" id="sub"></p></div>
   <div class="seg" id="per" role="group" aria-label="Período">
-    <button aria-pressed="false" data-p="hoje">Hoje</button>
-    <button aria-pressed="true" data-p="semana">Semana</button>
-    <button aria-pressed="false" data-p="mes">Mês</button>
+    <button type="button" aria-pressed="false" data-p="hoje">Hoje</button>
+    <button type="button" aria-pressed="true" data-p="semana">Semana</button>
+    <button type="button" aria-pressed="false" data-p="mes">Mês</button>
   </div>
-  <div class="acts">
-    <button class="btn sec sm" id="tema-toggle" type="button" aria-pressed="false" aria-label="Ativar modo escuro">🌙 Modo escuro</button>
-    <button class="btn sec sm" id="cfg" type="button">Configurar</button>
-    <button class="btn sec sm" id="sair" type="button">Sair</button>
-  </div>
+  <button class="btn" id="novo" type="button"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg><span>Novo atendimento</span></button>
 </header>
 <div class="ban" id="ban" hidden></div>
-<nav class="tabs" id="tabs" aria-label="Seções">
-  <button data-t="painel" aria-pressed="true">Painel</button>
-  <button data-t="agenda" id="tab-ag" aria-pressed="false" hidden>Agenda</button>
-  <button data-t="caixa" aria-pressed="false">Caixa</button>
-  <button data-t="clube" aria-pressed="false">Clube</button>
-  <button data-t="servicos" aria-pressed="false">Serviços</button>
-  <button data-t="barbeiros" aria-pressed="false">Barbeiros</button>
-  <button data-t="estoque" aria-pressed="false">Estoque</button>
-  <button data-t="gastos" aria-pressed="false">Gastos</button>
-</nav>
 
-<main>
+<main class="content">
 <section id="v-painel" class="grid">
-<section id="card-link-agendamento" class="card full booking-link-card" hidden>
-    <h2>Link de agendamento online</h2>
-    <p class="sub">Compartilhe este link com seus clientes para que escolham o serviço e reservem um horário disponíveis, sem precisar falar com você antes.</p>
-    <div class="booking-link-row"><input id="link-agendamento" class="f" readonly aria-label="Link público de agendamento"><button class="btn" type="button" id="copiar-link-agendamento">Copiar link</button><a class="btn sec" id="abrir-link-agendamento" target="_blank" rel="noopener">Visualizar</a></div>
-    <p class="lab" style="margin-bottom:0">Este bloco só aparece quando a opção “Trabalho com agendamento de horários” estiver ativada nas configurações.</p>
+<section class="saldo gate sensivel" aria-label="Resultado do período">
+    <div class="saldo-topo">
+      <span class="saldo-rot" id="saldo-rot">Lucro da semana</span>
+      <button class="icon-btn" id="olho" type="button" aria-pressed="false" aria-label="Esconder valores"><svg class="i" aria-hidden="true"><use href="#i-eye"/></svg></button>
+    </div>
+    <p class="num saldo-valor" id="luc">-</p>
+    <div class="saldo-linha">
+      <div><span>Entrou</span><b class="num" id="in">-</b></div>
+      <div><span>Gastos</span><b class="num" id="out">-</b></div>
+      <div><span>Atendimentos</span><b class="num" id="qt">-</b></div>
+      <div><span>Produtos</span><b class="num" id="pv">-</b></div>
+      <div><span>Clube</span><b class="num" id="cv">-</b></div>
+    </div>
+    <div class="bars" id="bars" role="img" aria-label="Entradas por período"></div><div class="ticks" id="ticks"></div>
   </section>
+  <div class="atalhos" aria-label="Atalhos">
+    <button class="atalho principal" type="button" data-atalho="atendimento"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>Atendimento</button>
+    <button class="atalho" type="button" data-atalho="horario" id="atalho-horario" hidden><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg></span>Marcar horário</button>
+    <button class="atalho" type="button" data-atalho="vender"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-cart"/></svg></span>Vender produto</button>
+    <button class="atalho" type="button" data-atalho="caixa"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-cash"/></svg></span>Caixa</button>
+    <button class="atalho" type="button" data-atalho="clube"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-crown"/></svg></span>Clube</button>
+    <button class="atalho" type="button" data-atalho="gasto"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-receipt"/></svg></span>Lançar gasto</button>
+  </div>
+
   <section id="card-estoque-baixo" class="card full alerta-card" hidden>
     <h2>Estoque baixo</h2>
     <div id="estoque-baixo"></div>
@@ -124,22 +189,14 @@
     </details>
     <div id="aniver"></div>
   </section>
-  <section class="card hero gate" aria-label="Lucro">
-    <p class="lab">Lucro</p><p class="num big ok" id="luc">-</p>
-    <div class="mini">
-      <div><p class="lab">Entrou</p><p class="num" id="in">-</p></div>
-      <div><p class="lab">Gastos</p><p class="num" id="out">-</p></div>
-      <div><p class="lab">Atendimentos</p><p class="num" id="qt">-</p></div>
-      <div><p class="lab">Produtos vendidos</p><p class="num" id="pv">-</p></div>
-      <div><p class="lab">Clube</p><p class="num" id="cv">-</p></div>
-    </div>
-    <div class="bars" id="bars" role="img" aria-label="Entradas por período"></div><div class="ticks" id="ticks"></div>
-  </section>
-  <section class="card k gate" aria-label="Formas de pagamento"><h2>Como pagaram</h2><div id="pag"></div></section>
-  <section class="card half"><h2>Clientes mais frequentes</h2><div id="rank"></div></section>
-  <section class="card half gate" aria-label="Últimos atendimentos"><h2>Últimos atendimentos</h2><div id="ult"></div></section>
-  <section class="card hero gate" aria-label="Ranking de gastos"><h2>Para onde foi o dinheiro</h2><div id="gst"></div></section>
-  <section class="card k gate" aria-label="Indicadores"><h2>Indicadores</h2><div id="kpi"></div></section>
+  
+  
+  
+  <section class="card hero gate sensivel" aria-label="Últimos atendimentos"><h2>Últimos atendimentos</h2><div id="ult"></div></section>
+  <section class="card k gate sensivel" aria-label="Formas de pagamento"><h2>Como pagaram</h2><div id="pag"></div></section>
+  <section class="card hero gate sensivel" aria-label="Ranking de gastos"><h2>Para onde foi o dinheiro</h2><div id="gst"></div></section>
+  <section class="card k gate sensivel" aria-label="Indicadores"><h2>Indicadores</h2><div id="kpi"></div></section>
+  <section class="card full"><h2>Clientes mais frequentes</h2><div id="rank"></div></section>
   <section class="card full">
     <h2>Clientes para chamar</h2>
     <p class="sub" style="margin:-8px 0 12px">Clientes que estão demorando mais do que o normal para voltar.</p>
@@ -157,6 +214,39 @@
       <div><h2 style="font-size:15px">Últimas mensagens</h2><div id="ms"></div></div>
     </div>
   </section>
+  <section id="card-link-agendamento" class="card full booking-link-card" hidden>
+    <h2>Link de agendamento online</h2>
+    <p class="sub">Compartilhe este link com seus clientes para que escolham o serviço e reservem um horário disponíveis, sem precisar falar com você antes.</p>
+    <div class="booking-link-row"><input id="link-agendamento" class="f" readonly aria-label="Link público de agendamento"><button class="btn" type="button" id="copiar-link-agendamento">Copiar link</button><a class="btn sec" id="abrir-link-agendamento" target="_blank" rel="noopener">Visualizar</a></div>
+    <p class="lab" style="margin-bottom:0">Este bloco só aparece quando a opção “Trabalho com agendamento de horários” estiver ativada nas configurações.</p>
+  </section>
+</section>
+
+<section id="v-relatorios" hidden>
+  <div class="filtros">
+    <div class="seg" id="rel-rapido" role="group" aria-label="Período rápido">
+      <button type="button" data-r="7" aria-pressed="false">7 dias</button>
+      <button type="button" data-r="30" aria-pressed="false">30 dias</button>
+      <button type="button" data-r="mes" aria-pressed="true">Este mês</button>
+      <button type="button" data-r="passado" aria-pressed="false">Mês passado</button>
+    </div>
+    <div class="acts">
+      <label class="lab" for="rel-de">De</label><input id="rel-de" type="date" class="f f-auto">
+      <label class="lab" for="rel-ate">até</label><input id="rel-ate" type="date" class="f f-auto">
+    </div>
+  </div>
+  <div class="gate sensivel" id="rel-corpo" aria-label="Relatórios">
+    <div class="kpis" id="rel-kpis"></div>
+    <div class="grid">
+      <section class="card full"><h2>Entradas por dia</h2><div id="rel-diario" class="grafico"></div></section>
+      <section class="card half"><h2>Por barbeiro</h2><div id="rel-barb"></div></section>
+      <section class="card half"><h2>Horários de pico</h2><p class="sub" style="margin:-8px 0 12px">Atendimentos por dia da semana e hora.</p><div id="rel-pico"></div></section>
+      <section class="card half"><h2>Serviços mais feitos</h2><div id="rel-serv"></div></section>
+      <section class="card half"><h2>Produtos mais vendidos</h2><div id="rel-prod"></div></section>
+      <section class="card half"><h2>Faltas na agenda</h2><div id="rel-faltas"></div></section>
+      <section class="card half"><h2>Como pagaram</h2><div id="rel-formas"></div></section>
+    </div>
+  </div>
 </section>
 
 <section id="v-agenda" hidden>
@@ -187,7 +277,7 @@
 </section>
 
 <section id="v-caixa" hidden>
-  <div class="card gate" style="margin-bottom:14px" aria-label="Caixa do dia">
+  <div class="card gate sensivel" style="margin-bottom:14px" aria-label="Caixa do dia">
     <h2>Caixa do dia</h2>
     <div id="cx"></div>
   </div>
@@ -285,7 +375,14 @@
 </main>
 </div>
 
-<button class="fab" id="novo" type="button">Novo atendimento</button>
+<nav class="bottom-nav" id="bottom-nav" aria-label="Atalhos de navegação">
+  <button type="button" data-t="painel" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span>Início</span></button>
+  <button type="button" data-t="agenda" id="bn-ag" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg><span>Agenda</span></button>
+  <span aria-hidden="true"></span>
+  <button type="button" data-t="caixa" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-cash"/></svg><span>Caixa</span></button>
+  <button type="button" id="bn-mais" aria-pressed="false" aria-controls="side"><svg class="i" aria-hidden="true"><use href="#i-dots"/></svg><span>Mais</span></button>
+</nav>
+<div id="tip" role="tooltip" hidden></div>
 <dialog id="dAt"><h2>Novo atendimento</h2>
 <form id="fAt">
   <label class="lab" for="at-cliente-existente">Cliente cadastrado</label>
@@ -556,6 +653,6 @@
 </form></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="script.js?v=5"></script>
+<script src="script.js?v=6"></script>
 </body>
 </html>

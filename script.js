@@ -20,7 +20,7 @@ function aplicarTema(tema) {
   document.documentElement.dataset.theme = escuro ? 'dark' : 'light';
   const botao = document.querySelector('#tema-toggle');
   if (botao) {
-    botao.textContent = escuro ? '☀️ Modo claro' : '🌙 Modo escuro';
+    botao.innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${escuro ? 'sun' : 'moon'}"/></svg><span>${escuro ? 'Modo claro' : 'Modo escuro'}</span>`;
     botao.setAttribute('aria-pressed', String(escuro));
     botao.setAttribute('aria-label', escuro ? 'Ativar modo claro' : 'Ativar modo escuro');
   }
@@ -150,8 +150,15 @@ function marca() {
   if (INFO.logo) $('#logo').src = INFO.logo;
   $('#ini').hidden = !!INFO.logo;
   $('#ini').textContent = INFO.nome.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase();
-  $('#sub').textContent = 'Resumo ' + {hoje: 'de hoje', semana: 'da semana', mes: 'do mês'}[PER];
+  const per = {hoje: 'de hoje', semana: 'da semana', mes: 'do mês'}[PER];
+  $('#saldo-rot').textContent = 'Lucro ' + per;
+  if (ABA === 'painel') $('#sub').textContent = 'Resumo ' + per;
   $('#tab-ag').hidden = !INFO.usa_agendamento;
+  $('#atalho-horario').hidden = !INFO.usa_agendamento;
+  // Na barra inferior, sem agenda o espaço vai para o Clube
+  const bnAg = $('#bn-ag'), alvo = INFO.usa_agendamento ? 'agenda' : 'clube';
+  bnAg.dataset.t = alvo;
+  bnAg.innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${INFO.usa_agendamento ? 'cal' : 'crown'}"/></svg><span>${INFO.usa_agendamento ? 'Agenda' : 'Clube'}</span>`;
   $('#card-link-agendamento').hidden = !INFO.usa_agendamento;
   if (INFO.usa_agendamento) { const url = location.origin + location.pathname + '?agendar=' + encodeURIComponent(INFO.id); $('#link-agendamento').value = url; $('#abrir-link-agendamento').href = url; }
   document.body.classList.toggle('restr', INFO.restrito);
@@ -201,7 +208,7 @@ async function painel() {
 
 async function recentes() {
   if (INFO.restrito) return;
-  const l = await sb.from('atendimento').select('id,valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome),barbeiro(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
+  const l = await sb.from('atendimento').select('id,valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome),barbeiro(nome)').order('data_hora', {ascending: false}).limit(8).then(ok);
   $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${a.barbeiro?.nome ? ' · ' + esc(a.barbeiro.nome) : ''}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS_TODAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b><button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="ENTRADA" data-id="${a.id}" aria-label="Excluir entrada de ${esc(a.cliente?.nome || 'cliente')}">Excluir</button></div>`).join('') : vazio('Nenhum atendimento ainda.');
 }
 
@@ -384,13 +391,67 @@ async function gastos() {
 }
 
 // ---------- Navegação e eventos ----------
+const PAGINAS = {
+  painel: ['Início', ''], relatorios: ['Relatórios', 'Como a barbearia está indo'], agenda: ['Agenda', 'Horários do dia'],
+  caixa: ['Caixa', 'Abertura, sangrias e fechamento'], clube: ['Clube', 'Assinantes e planos'], servicos: ['Serviços', 'Preços e duração'],
+  barbeiros: ['Barbeiros', 'Equipe e comissões'], estoque: ['Estoque', 'Produtos de uso e de venda'], gastos: ['Gastos', 'Saídas da barbearia'],
+};
+let ABA = 'painel';
 function aba(nome) {
-  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === nome)));
-  ['painel', 'agenda', 'caixa', 'clube', 'servicos', 'barbeiros', 'estoque', 'gastos'].forEach(n => $('#v-' + n).hidden = n !== nome);
-  const carregar = {agenda, servicos, gastos, barbeiros, estoque, caixa, clube}[nome];
+  if (!PAGINAS[nome]) return;
+  ABA = nome;
+  document.querySelectorAll('#tabs [data-t], #bottom-nav [data-t]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === nome)));
+  $('#bn-mais').setAttribute('aria-pressed', String(!document.querySelector(`#bottom-nav [data-t="${nome}"]`)));
+  Object.keys(PAGINAS).forEach(n => $('#v-' + n).hidden = n !== nome);
+  $('#page-title').textContent = PAGINAS[nome][0];
+  $('#sub').textContent = nome === 'painel' ? 'Resumo ' + {hoje: 'de hoje', semana: 'da semana', mes: 'do mês'}[PER] : PAGINAS[nome][1];
+  $('#per').hidden = nome !== 'painel';
+  fecharMenu();
+  window.scrollTo({top: 0});
+  const carregar = {agenda, servicos, gastos, barbeiros, estoque, caixa, clube, relatorios}[nome];
   if (carregar) seguro(carregar);
 }
-$('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) aba(b.dataset.t); });
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) aba(b.dataset.t); });
+$('#bottom-nav').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) aba(b.dataset.t); });
+
+// Menu deslizante (celular)
+function abrirMenu() { $('#tela-app').classList.add('menu-aberto'); $('#scrim').hidden = false; $('#menu-fechar').focus(); }
+function fecharMenu() { $('#tela-app').classList.remove('menu-aberto'); $('#scrim').hidden = true; }
+['#menu-abrir', '#bn-mais'].forEach(s => $(s).addEventListener('click', abrirMenu));
+['#menu-fechar', '#scrim'].forEach(s => $(s).addEventListener('click', fecharMenu));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#tela-app').classList.contains('menu-aberto')) fecharMenu(); });
+
+// Esconder valores (olho), lembrado neste aparelho
+function aplicarOlho(ocultar) {
+  document.body.classList.toggle('ocultar', ocultar);
+  $('#olho').setAttribute('aria-pressed', String(ocultar));
+  $('#olho').setAttribute('aria-label', ocultar ? 'Mostrar valores' : 'Esconder valores');
+  $('#olho').innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${ocultar ? 'eye-off' : 'eye'}"/></svg>`;
+}
+aplicarOlho(guarda('cortepay-ocultar') === '1');
+$('#olho').addEventListener('click', () => { const o = !document.body.classList.contains('ocultar'); guarda('cortepay-ocultar', o ? '1' : '0'); aplicarOlho(o); });
+
+// Atalhos do início
+$('.atalhos').addEventListener('click', e => {
+  const b = e.target.closest('[data-atalho]'); if (!b) return;
+  const a = b.dataset.atalho;
+  if (a === 'atendimento') $('#novo').click();
+  else if (a === 'horario') { aba('agenda'); $('#novo-ag').click(); }
+  else if (a === 'vender') $('#nova-venda').click();
+  else if (a === 'gasto') { aba('gastos'); setTimeout(() => $('#gs-d').focus(), 50); }
+  else aba(a);
+});
+
+// Dica ao passar o mouse ou tocar em barras e células dos gráficos
+document.addEventListener('pointerover', e => {
+  const el = e.target.closest('[data-tip]'), tip = $('#tip');
+  if (!el) { tip.hidden = true; return; }
+  tip.textContent = el.dataset.tip; tip.hidden = false;
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth;
+  tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+  tip.style.top = Math.max(8, r.top - tip.offsetHeight - 8) + 'px';
+});
+document.addEventListener('scroll', () => { $('#tip').hidden = true; }, {passive: true});
 $('#per').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   PER = b.dataset.p; document.querySelectorAll('#per button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
@@ -723,7 +784,7 @@ async function comissoes() {
           <div><p class="lab">Vales no período</p><p class="num">${brl(c.vales)}</p></div>
           <div><p class="lab">Pago no período</p><p class="num">${brl(c.pagos)}</p></div>
         </div></div>
-      <span class="chip ${saldo > 0 ? 'warn' : saldo < 0 ? 'red' : 'ok'} saldo">${saldo < 0 ? 'Adiantado ' + brl(-saldo) : 'A receber ' + brl(saldo)}</span>
+      <span class="chip ${saldo > 0 ? 'warn' : saldo < 0 ? 'red' : 'ok'} saldo-ch">${saldo < 0 ? 'Adiantado ' + brl(-saldo) : 'A receber ' + brl(saldo)}</span>
       <div class="acts"><button class="btn sec sm" data-a="VALE">Vale</button><button class="btn sm" data-a="PAGAMENTO">Pagar</button>
       ${BARB.find(b => b.id === c.barbeiro_id)?.telefone ? '<button class="btn sec sm" data-a="extrato">Enviar extrato</button>' : ''}</div></div>`;
   }).join('');
@@ -1095,6 +1156,114 @@ $('#fRec').addEventListener('submit', async e => {
   } catch (x) { $('#rec-err').textContent = x.message; }
 });
 $('#cf-fid').addEventListener('change', () => { $('#cf-fid-box').hidden = !$('#cf-fid').checked; });
+
+// ======================= RELATÓRIOS =======================
+const DIAS_SEMANA = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const pct = (a, b) => b ? Math.round(a * 100 / b) : 0;
+function relIntervalo(r) {
+  const h = new Date(); h.setHours(12, 0, 0, 0); const hoje = iso(h);
+  if (r === '7') return [maisDia(hoje, -6), hoje];
+  if (r === '30') return [maisDia(hoje, -29), hoje];
+  if (r === 'passado') return [iso(new Date(h.getFullYear(), h.getMonth() - 1, 1, 12)), iso(new Date(h.getFullYear(), h.getMonth(), 0, 12))];
+  return [iso(new Date(h.getFullYear(), h.getMonth(), 1, 12)), hoje];
+}
+function relRapido(r) {
+  document.querySelectorAll('#rel-rapido button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.r === r)));
+  if (r) { const [a, b] = relIntervalo(r); $('#rel-de').value = a; $('#rel-ate').value = b; }
+}
+relRapido('mes');
+$('#rel-rapido').addEventListener('click', e => { const b = e.target.closest('button[data-r]'); if (!b) return; relRapido(b.dataset.r); seguro(relatorios); });
+['rel-de', 'rel-ate'].forEach(i => $('#' + i).addEventListener('change', () => { relRapido(null); seguro(relatorios); }));
+
+const tabelaDados = (cab, linhas) => `<details class="tabela-dados"><summary>Ver em tabela</summary><table><thead><tr>${cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+  <tbody>${linhas.map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></details>`;
+const barraLinha = (nome, detalhe, valor, largura) => `<div class="row2"><div class="who"><b>${esc(nome)}</b><small>${esc(detalhe)}</small>
+  <div class="tr" style="margin-top:8px"><i style="width:${Math.max(2, Math.min(100, largura))}%"></i></div></div><b class="num">${esc(valor)}</b></div>`;
+
+async function relatorios() {
+  const corpo = ['#rel-diario', '#rel-barb', '#rel-pico', '#rel-serv', '#rel-prod', '#rel-faltas', '#rel-formas'];
+  if (INFO.restrito) { $('#rel-kpis').innerHTML = vazio('Disponível após o pagamento da mensalidade.'); corpo.forEach(c => $(c).innerHTML = ''); return; }
+  const de = $('#rel-de').value, ate = $('#rel-ate').value;
+  if (!de || !ate || de > ate) { $('#rel-kpis').innerHTML = vazio('Escolha um período válido.'); return; }
+  const r = await rpc('relatorio', {p_de: de, p_ate: ate}), s = r.resumo;
+  const fat = Number(s.servicos) + Number(s.produtos) + Number(s.clube), lucro = fat - Number(s.gastos);
+  const tile = (rot, val, det) => `<div class="kpi"><p class="lab">${esc(rot)}</p><p class="num">${esc(val)}</p><small>${esc(det)}</small></div>`;
+  $('#rel-kpis').innerHTML =
+    tile('Faturamento', brl(fat), `Serviços ${brl(s.servicos)} · produtos ${brl(s.produtos)} · clube ${brl(s.clube)}`)
+    + tile('Lucro', brl(lucro), `Gastos de ${brl(s.gastos)}`)
+    + tile('Atendimentos', s.atendimentos, s.cobertos ? `${s.cobertos} pelo clube ou fidelidade` : 'Todos pagos na hora')
+    + tile('Ticket médio', brl(s.pagos ? (Number(s.servicos) + Number(s.produtos)) / s.pagos : 0), 'Por atendimento pago, com produtos')
+    + tile('Clientes atendidos', s.clientes, `${s.novos} ${s.novos === 1 ? 'cliente novo' : 'clientes novos'}`)
+    + tile('Faltas', pct(s.faltas, s.agendados) + '%', `${s.faltas} de ${s.agendados} horários`)
+    + tile('Comissões', brl(s.comissoes), 'Serviços e produtos');
+
+  // Entradas por dia (barras, um tom; a barra sob o cursor fica vermelha)
+  const d = r.diario, mx = Math.max(0, ...d.map(x => Number(x.valor)));
+  $('#rel-diario').innerHTML = !mx ? vazio('Nenhuma entrada no período.') :
+    `<div class="bars" role="img" aria-label="Entradas por dia">${d.map(x => `<div class="col" tabindex="0" data-tip="${dataBR(x.dia)}: ${brl(x.valor)}"><div class="b" style="height:${Math.round(Number(x.valor) / mx * 100)}%"></div></div>`).join('')}</div>
+    <div class="eixo"><span>${dataBR(d[0].dia)}</span>${d.length > 2 ? `<span>${dataBR(d[Math.floor(d.length / 2)].dia)}</span>` : ''}<span>${dataBR(d[d.length - 1].dia)}</span></div>
+    ${tabelaDados(['Dia', 'Entradas'], d.map(x => [dataBR(x.dia), brl(x.valor)]))}`;
+
+  // Por barbeiro
+  const bs = r.barbeiros, mb = Math.max(1, ...bs.map(b => Number(b.servicos) + Number(b.produtos)));
+  $('#rel-barb').innerHTML = bs.length ? bs.map(b => barraLinha(b.nome,
+    `${b.atendimentos} ${b.atendimentos === 1 ? 'atendimento' : 'atendimentos'} · produtos ${brl(b.produtos)} · comissão ${brl(b.comissao)}`,
+    brl(Number(b.servicos) + Number(b.produtos)), (Number(b.servicos) + Number(b.produtos)) / mb * 100)).join('') : vazio('Nenhum atendimento no período.');
+
+  // Horários de pico (mapa de calor, um tom em 5 degraus)
+  const pico = r.pico;
+  if (!pico.length) $('#rel-pico').innerHTML = vazio('Nenhum atendimento no período.');
+  else {
+    const hs = pico.map(p => p.hora), h0 = Math.min(...hs, +String(INFO.abre).slice(0, 2)), h1 = Math.max(...hs, +String(INFO.fecha).slice(0, 2) - 1);
+    const mxp = Math.max(...pico.map(p => p.qtd)), horas = []; for (let h = h0; h <= h1; h++) horas.push(h);
+    const q = (dia, h) => pico.find(p => p.dia === dia && p.hora === h)?.qtd || 0;
+    let html = `<div class="hm" style="grid-template-columns:36px repeat(${horas.length}, minmax(18px, 1fr))"><span></span>${horas.map(h => `<span class="h">${h % 2 === 0 ? h + 'h' : ''}</span>`).join('')}`;
+    for (let dia = 1; dia <= 7; dia++) {
+      html += `<span class="rot">${DIAS_SEMANA[dia]}</span>` + horas.map(h => { const n = q(dia, h);
+        return `<span class="c" data-n="${n ? Math.max(1, Math.ceil(n / mxp * 5)) : 0}" data-tip="${DIAS_SEMANA[dia]}, ${h}h: ${n} ${n === 1 ? 'atendimento' : 'atendimentos'}"></span>`; }).join('');
+    }
+    const top = [...pico].sort((a, b) => b.qtd - a.qtd).slice(0, 3);
+    $('#rel-pico').innerHTML = html + `</div><div class="legenda">Menos <i style="background:var(--s1)"></i><i style="background:var(--s2)"></i><i style="background:var(--s3)"></i><i style="background:var(--s4)"></i><i style="background:var(--s5)"></i> Mais</div>
+      <p class="sub" style="margin-top:10px">Mais movimentados: ${top.map(t => `${DIAS_SEMANA[t.dia]} ${t.hora}h (${t.qtd})`).join(', ')}.</p>`;
+  }
+
+  // Serviços e produtos
+  const sv = r.servicos, ms = Math.max(1, ...sv.map(x => x.qtd));
+  $('#rel-serv').innerHTML = sv.length ? sv.map(x => barraLinha(x.nome, `${x.qtd} ${x.qtd === 1 ? 'vez' : 'vezes'}`, brl(x.total), x.qtd / ms * 100)).join('') : vazio('Nenhum serviço no período.');
+  const pr = r.produtos, mp = Math.max(1, ...pr.map(x => Number(x.total)));
+  $('#rel-prod').innerHTML = pr.length ? pr.map(x => barraLinha(x.nome, `${qtd(x.qtd)} vendidos · lucro estimado ${brl(x.lucro)}`, brl(x.total), Number(x.total) / mp * 100)).join('') : vazio('Nenhum produto vendido no período.');
+
+  // Faltas
+  if (!INFO.usa_agendamento) $('#rel-faltas').innerHTML = vazio('A agenda está desligada nas configurações.');
+  else if (!s.agendados) $('#rel-faltas').innerHTML = vazio('Nenhum horário concluído ou com falta no período.');
+  else $('#rel-faltas').innerHTML = `<p class="num big">${pct(s.faltas, s.agendados)}%</p><p class="sub" style="margin-bottom:12px">dos clientes agendados faltaram (${s.faltas} de ${s.agendados}). Lembrar no dia anterior ajuda a reduzir.</p>`
+    + r.faltas_dia.filter(f => f.total).map(f => linha(DIAS_SEMANA[f.dia], `${f.faltas} de ${f.total} (${pct(f.faltas, f.total)}%)`, pct(f.faltas, f.total), 'red')).join('');
+
+  // Formas de pagamento
+  const tf = soma(r.formas.map(f => f.valor));
+  $('#rel-formas').innerHTML = r.formas.length ? r.formas.map(f => linha(FORMAS[f.forma] || f.forma, `${brl(f.valor)} (${pct(f.valor, tf)}%)`, pct(f.valor, tf))).join('') : vazio('Nenhuma entrada no período.');
+}
+
+// ======================= APP INSTALÁVEL =======================
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+let PEDIDO_INSTALAR = null;
+const NO_IPHONE = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const JA_INSTALADO = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+if (NO_IPHONE && !JA_INSTALADO) $('#instalar').hidden = false;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); PEDIDO_INSTALAR = e; $('#instalar').hidden = false; });
+window.addEventListener('appinstalled', () => { $('#instalar').hidden = true; toast('App instalado. Ele já está na tela inicial.'); });
+$('#instalar').addEventListener('click', async () => {
+  if (PEDIDO_INSTALAR) {
+    PEDIDO_INSTALAR.prompt();
+    const r = await PEDIDO_INSTALAR.userChoice;
+    if (r.outcome === 'accepted') $('#instalar').hidden = true;
+    PEDIDO_INSTALAR = null;
+  } else {
+    toast('No iPhone: toque em Compartilhar (quadrado com seta) e depois em "Adicionar à Tela de Início".');
+  }
+});
 
 // ======================= ADMINISTRAÇÃO (só acesso e cobrança) =======================
 let LISTA = [], MENSAGEM = '', HIST_PAGAMENTOS = [], EVOLUCAO = [], AQUISICOES_PAGAS = new Set();
