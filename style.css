@@ -479,3 +479,4 @@ body:has(#tela-login:not([hidden])) .pole, body:has(#tela-convite:not([hidden]))
 .upgrade .preco { font-size: 15px; color: var(--mut); margin: 4px 0 18px; }
 .upgrade .preco b { color: var(--ink); font-size: 28px; }
 .sel { background: color-mix(in srgb, var(--red) 14%, var(--surface)) !important; border-color: var(--red) !important; color: var(--red) !important; }
+.versao { display: block; padding: 4px 12px 8px; color: var(--navy-mut); font-size: 12px; order: 9; }

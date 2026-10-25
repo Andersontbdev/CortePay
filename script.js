@@ -1323,10 +1323,13 @@ let LISTA = [], MENSAGEM = '', HIST_PAGAMENTOS = [], EVOLUCAO = [], AQUISICOES_P
 const TAXA_AQUISICAO = 99.90;
 let PRECO_PRO = 24.90, PLANOS_CFG = null;
 const dinheiro = () => PRECO_PRO;
+// Preço da barbearia: especial (desconto ou cortesia = 0) ou o padrão do Pro
+const precoDe = b => b && b.mensalidade_especial != null ? Number(b.mensalidade_especial) : PRECO_PRO;
 $('#pix').value = guarda('pix') || ''; $('#val').value = PRECO_PRO.toFixed(2); $('#val').readOnly = true;
 const rotulo = b => {
   switch (b.situacao) {
     case 'FREE': return ['', 'Plano Free'];
+    case 'CORTESIA': return ['ok', 'Cortesia (sem mensalidade)'];
     case 'TESTE': return ['blue', 'Pro em teste: ' + Math.max(0, -b.dias_atraso) + ' dias restantes'];
     case 'EM_DIA': return ['ok', 'Em dia'];
     case 'VENCE_EM_BREVE': return ['warn', b.dias_atraso === 0 ? 'Vence hoje' : 'Vence em breve'];
@@ -1334,29 +1337,31 @@ const rotulo = b => {
     default: return ['red', b.restricao_manual ? 'Modo restrito (manual)' : 'Modo restrito'];
   }
 };
-const msgCobranca = b => { const at = b.dias_atraso > 0; return `Olá, ${b.nome}! Sua mensalidade do sistema (${brl(dinheiro())}) ${at ? 'venceu' : 'vence'} em ${dataBR(b.vencimento)}. Para pagar via Pix, use a chave: ${$('#pix').value.trim()}. Depois de pagar, responda aqui com o comprovante.${at ? ' Lembrete: após 7 dias de atraso, os painéis de ganhos e gastos ficam bloqueados. Os lançamentos continuam normais.' : ''} Obrigado!`; };
+const msgCobranca = b => { const at = b.dias_atraso > 0; return `Olá, ${b.nome}! Sua mensalidade do sistema (${brl(precoDe(b))}) ${at ? 'venceu' : 'vence'} em ${dataBR(b.vencimento)}. Para pagar via Pix, use a chave: ${$('#pix').value.trim()}. Depois de pagar, responda aqui com o comprovante.${at ? ' Lembrete: após 7 dias de atraso, os painéis de ganhos e gastos ficam bloqueados. Os lançamentos continuam normais.' : ''} Obrigado!`; };
 const msgConvite = b => `Olá! Seu acesso ao sistema da ${b.nome} está liberado. Abra ${location.origin + location.pathname}?convite=${b.convite}, toque em "Criar conta" e use o e-mail e a senha que você escolher. O código de convite já vem preenchido (${b.convite}).${b.plano === 'PRO' ? (b.dias_teste ? ` Você tem ${b.dias_teste} dias de teste grátis do plano Pro.` : ' Seu plano é o Pro.') : ' Seu plano é o Free (gratuito).'}`;
 function admDesenhar() {
-  const c = {FREE: 0, EM_DIA: 0, TESTE: 0, VENCE_EM_BREVE: 0, ATRASADA: 0, RESTRITO: 0}; let pend = 0;
+  const c = {FREE: 0, CORTESIA: 0, EM_DIA: 0, TESTE: 0, VENCE_EM_BREVE: 0, ATRASADA: 0, RESTRITO: 0}; let pend = 0;
   $('#lista').innerHTML = LISTA.length ? LISTA.map(b => {
     c[b.situacao]++;
-    const pro = b.plano !== 'FREE';
-    const [cor, texto] = rotulo(b), teste = b.situacao === 'TESTE', cobrar = pro && ['VENCE_EM_BREVE', 'ATRASADA', 'RESTRITO'].includes(b.situacao);
-    if (pro && b.ativada && !teste && b.dias_atraso >= 0 && !b.nao_pago && !b.restricao_manual) pend++;
+    const pro = b.plano !== 'FREE', cortesia = pro && Number(b.mensalidade_especial) === 0 && b.mensalidade_especial != null;
+    const desconto = pro && !cortesia && b.mensalidade_especial != null;
+    const [cor, texto] = rotulo(b), teste = b.situacao === 'TESTE', cobrar = pro && !cortesia && ['VENCE_EM_BREVE', 'ATRASADA', 'RESTRITO'].includes(b.situacao);
+    if (pro && !cortesia && b.ativada && !teste && b.dias_atraso >= 0 && !b.nao_pago && !b.restricao_manual) pend++;
     return `<div class="row2" data-id="${b.id}">
       <span class="av">${esc((b.nome.trim()[0] || '?'))}</span>
-      <div class="who"><b>${esc(b.nome)}</b><small>${pro ? (teste ? 'teste até ' : 'vencimento ') + dataBR(b.vencimento) : 'Sem mensalidade'}${b.nao_pago ? '. Marcado como não pago.' : ''}${b.ativada ? '' : '. Aguardando o dono criar a conta.'}</small></div>
+      <div class="who"><b>${esc(b.nome)}</b><small>${!pro ? 'Sem mensalidade' : cortesia ? 'Pro gratuito (cortesia)' : (teste ? 'teste até ' : 'vencimento ') + dataBR(b.vencimento) + ` · ${brl(precoDe(b))}/mês${desconto ? ' (preço especial)' : ''}`}${b.nao_pago ? '. Marcado como não pago.' : ''}${b.ativada ? '' : '. Aguardando o dono criar a conta.'}</small></div>
       <span class="chip ${pro ? 'pro' : 'free'}">${pro ? 'Pro' : 'Free'}</span>${pro ? `<span class="chip ${cor}">${esc(texto)}</span>` : ''}
       <div class="acts">
         ${b.ativada ? '' : `<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(b.telefone))}?text=${encodeURIComponent(msgConvite(b))}">Enviar convite</a><button class="btn sec sm" data-a="copiar">Copiar convite</button>`}
         ${AQUISICOES_PAGAS.has(Number(b.id)) ? '<span class="chip ok">Implantação paga</span>' : `<button class="btn sec sm" data-a="aquisicao" title="Confirmar recebimento único de R$ 99,90">Confirmar implantação (R$ 99,90)</button>`}
-        ${teste || !pro ? '' : `<span class="lab">Mensalidade paga?</span><button class="btn sec sm" data-a="sim">Sim</button><button class="btn sec sm${b.nao_pago ? ' sel' : ''}" data-a="nao">Não</button>`}
+        ${teste || !pro || cortesia ? '' : `<span class="lab">Mensalidade paga?</span><button class="btn sec sm" data-a="sim">Sim</button><button class="btn sec sm${b.nao_pago ? ' sel' : ''}" data-a="nao">Não</button>`}
         <button class="btn sec sm" data-a="plano">${pro ? 'Mudar para Free' : 'Mudar para Pro'}</button>
+        ${pro && PLANOS_CFG ? '<button class="btn sec sm" data-a="preco">Preço</button>' : ''}
         ${cobrar ? `<a class="wa" data-w="1" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(b.telefone))}?text=${encodeURIComponent(msgCobranca(b))}">Cobrar no WhatsApp</a>` : ''}
         <button class="btn sec sm" data-a="${b.restricao_manual ? 'liberar' : 'restringir'}">${b.restricao_manual ? 'Liberar visualização' : 'Restringir visualização'}</button>
       </div></div>`;
   }).join('') : vazio('Nenhuma barbearia cadastrada. Use "Nova barbearia".');
-  $('#m-f').textContent = c.FREE; $('#m-o').textContent = c.EM_DIA + c.TESTE; $('#m-p').textContent = c.VENCE_EM_BREVE; $('#m-a').textContent = c.ATRASADA; $('#m-s').textContent = c.RESTRITO;
+  $('#m-f').textContent = c.FREE; $('#m-o').textContent = c.EM_DIA + c.TESTE + c.CORTESIA; $('#m-p').textContent = c.VENCE_EM_BREVE; $('#m-a').textContent = c.ATRASADA; $('#m-s').textContent = c.RESTRITO;
   $('#pend').innerHTML = pend ? `<div class="pend">${pend} ${pend === 1 ? 'barbearia aguarda' : 'barbearias aguardam'} a sua confirmação de pagamento. Sem resposta em 7 dias após o vencimento, entram em modo restrito.</div>` : '';
 }
 function mesKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
@@ -1367,15 +1372,15 @@ function desenharBarrasAdmin(containerId, ticksId, values, formatMoney=false) {
   tx.innerHTML = values.map(x => `<span>${esc(x.label)}</span>`).join('');
 }
 function admDashboard() {
-  const mensalidade = PRECO_PRO;
-  const ativas = LISTA.filter(b => b.plano !== 'FREE' && ['EM_DIA','VENCE_EM_BREVE'].includes(b.situacao) && !b.em_teste && !b.restricao_manual).length;
-  $('#ad-mrr-txt').textContent = `${ativas} ${ativas === 1 ? 'barbearia' : 'barbearias'} no Pro × ${brl(PRECO_PRO)}`;
+  const pagantes = LISTA.filter(b => b.plano !== 'FREE' && ['EM_DIA','VENCE_EM_BREVE'].includes(b.situacao) && !b.em_teste && !b.restricao_manual);
+  const ativas = pagantes.length, mrr = soma(pagantes.map(precoDe)), cortesias = LISTA.filter(b => b.situacao === 'CORTESIA').length;
+  $('#ad-mrr-txt').textContent = `${ativas} ${ativas === 1 ? 'barbearia pagante' : 'barbearias pagantes'} no Pro${cortesias ? ` · ${cortesias} em cortesia` : ''}`;
   $('#ad-mens-txt').textContent = `Plano Pro de ${brl(PRECO_PRO)}`;
   $('#ad-modelo').textContent = `Implantação única de ${brl(TAXA_AQUISICAO)} + plano Pro de ${brl(PRECO_PRO)} por mês (Free é gratuito)`;
   const inad = LISTA.filter(b => ['ATRASADA','RESTRITO'].includes(b.situacao) || b.restricao_manual);
   const hoje = new Date(), mk = mesKey(hoje), meses = mesesUltimosSeis();
   const pagMes = HIST_PAGAMENTOS.filter(p => String(p.pago_em || '').slice(0,7) === mk);
-  $('#ad-mrr').textContent = brl(ativas * mensalidade);
+  $('#ad-mrr').textContent = brl(mrr);
   $('#ad-recebido').textContent = brl(pagMes.reduce((s,p)=>s+Number(p.valor||0),0));
   $('#ad-pagamentos-qtd').textContent = `${pagMes.length} ${pagMes.length===1?'pagamento confirmado':'pagamentos confirmados'}`;
   $('#ad-aquisicao-recebida').textContent = brl(pagMes.filter(p=>p.tipo==='aquisicao').reduce((s,p)=>s+Number(p.valor||0),0));
@@ -1416,7 +1421,8 @@ $('#lista').addEventListener('click', e => {
   seguro(async () => {
     if (a === 'copiar') { const x = LISTA.find(y => y.id === id); try { await navigator.clipboard.writeText(msgConvite(x)); toast('Convite copiado.'); } catch (er) { toast('Não foi possível copiar.', true); } return; }
     if (a === 'aquisicao') { if (!confirm('Confirma que recebeu a taxa única de implantação de R$ 99,90 desta barbearia?')) return; await rpc('admin_confirmar_aquisicao', {p_id: id, p_valor: TAXA_AQUISICAO}); }
-    else if (a === 'sim') await rpc('admin_confirmar_pagamento', {p_id: id, p_valor: dinheiro()});
+    else if (a === 'sim') await rpc('admin_confirmar_pagamento', {p_id: id, p_valor: precoDe(LISTA.find(y => y.id === id))});
+    else if (a === 'preco') { abrirPreco(LISTA.find(y => y.id === id)); return; }
     else if (a === 'nao') await rpc('admin_pagamento', {p_id: id, p_pago: false});
     else if (a === 'plano') { abrirPlanoB(LISTA.find(y => y.id === id)); return; }
     else await rpc('admin_restricao', {p_id: id, p_restrito: a === 'restringir'});
@@ -1462,6 +1468,31 @@ $('#planos-salvar').addEventListener('click', async () => {
     toast('Planos salvos. As barbearias veem a mudança na próxima vez que abrirem o sistema.'); await admCarregar();
   } catch (x) { $('#planos-err').textContent = x.message; }
 });
+// ---------- Preço especial ou cortesia de uma barbearia ----------
+let PRECO_B = null;
+function abrirPreco(b) {
+  PRECO_B = b;
+  const atual = b.mensalidade_especial == null ? 'PADRAO' : Number(b.mensalidade_especial) === 0 ? 'CORTESIA' : 'DESCONTO';
+  $('#pc-info').textContent = `${b.nome} · preço padrão do Pro: ${brl(PRECO_PRO)} por mês`;
+  document.querySelectorAll('#fPreco input[name="pc-tipo"]').forEach(r => { r.checked = r.value === atual; });
+  $('#pc-v').value = atual === 'DESCONTO' ? Number(b.mensalidade_especial).toFixed(2) : '';
+  $('#pc-v-box').hidden = atual !== 'DESCONTO'; $('#pc-err').textContent = '';
+  $('#dPreco').showModal();
+}
+$('#fPreco').addEventListener('change', () => { $('#pc-v-box').hidden = $('#fPreco input[name="pc-tipo"]:checked')?.value !== 'DESCONTO'; });
+$('#fPreco').addEventListener('submit', async e => {
+  e.preventDefault(); $('#pc-err').textContent = '';
+  const tipo = $('#fPreco input[name="pc-tipo"]:checked')?.value;
+  const v = tipo === 'PADRAO' ? null : tipo === 'CORTESIA' ? 0 : Number($('#pc-v').value);
+  if (tipo === 'DESCONTO' && !(v > 0)) { $('#pc-err').textContent = 'Informe o valor com desconto (maior que zero). Para grátis, escolha "Cortesia".'; return; }
+  try {
+    await rpc('admin_definir_mensalidade', {p_id: PRECO_B.id, p_valor: v});
+    $('#dPreco').close();
+    toast(tipo === 'CORTESIA' ? `${PRECO_B.nome} agora tem o Pro de cortesia.` : tipo === 'DESCONTO' ? `Preço especial de ${brl(v)} salvo.` : 'Voltou ao preço padrão.');
+    await admCarregar();
+  } catch (x) { $('#pc-err').textContent = x.message; }
+});
+
 let PLANO_B = null;
 function abrirPlanoB(b) {
   PLANO_B = b; const praPro = b.plano === 'FREE';

@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="CortePay">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 <meta name="color-scheme" content="only light">
 </head>
 <body>
@@ -131,6 +131,7 @@
     <button class="side-link destaque" id="instalar" type="button" hidden><svg class="i" aria-hidden="true"><use href="#i-down"/></svg><span>Instalar o app</span></button>
     <button class="side-link" id="tema-toggle" type="button" aria-pressed="false" aria-label="Ativar modo escuro"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg><span>Modo escuro</span></button>
     <button class="side-link" id="cfg" type="button"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg><span>Configurar</span></button>
+    <small class="versao">CortePay · versão 8</small>
     <button class="side-link" id="sair" type="button"><svg class="i" aria-hidden="true"><use href="#i-out"/></svg><span>Sair</span></button>
   </div>
 </aside>
@@ -577,7 +578,7 @@
 <div id="tela-admin" hidden>
 <div class="wrap">
 <header>
-  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias</p></div>
+  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias · versão 8</p></div>
   <div class="acts">
     <button class="btn sm" id="nova" type="button">Nova barbearia</button>
     <button class="btn sec sm" id="a-sair" type="button">Sair</button>
@@ -664,6 +665,19 @@
   <div class="acts"><button class="btn">Criar acesso</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
 </form></dialog>
 
+<dialog id="dPreco"><h2>Preço do Pro para esta barbearia</h2>
+<form id="fPreco">
+  <p class="sub" id="pc-info" style="margin-bottom:12px"></p>
+  <div class="benef" style="border-color:var(--line)">
+    <label class="op"><input type="radio" name="pc-tipo" value="PADRAO"><span><b>Preço padrão</b><small>Paga a mensalidade configurada em "Planos e recursos".</small></span></label>
+    <label class="op"><input type="radio" name="pc-tipo" value="DESCONTO"><span><b>Preço com desconto</b><small>Você define quanto ela paga por mês.</small></span></label>
+    <label class="op"><input type="radio" name="pc-tipo" value="CORTESIA"><span><b>Cortesia (grátis)</b><small>Tem o Pro completo, nunca vence e não aparece cobrança para você confirmar.</small></span></label>
+  </div>
+  <div id="pc-v-box" hidden><label class="lab" for="pc-v">Valor por mês (R$)</label><input id="pc-v" class="f" type="number" min="0.01" step="0.01"></div>
+  <p class="err" id="pc-err" role="alert"></p>
+  <div class="acts"><button class="btn">Salvar preço</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
 <dialog id="dPlanoB"><h2 id="pb-tit">Mudar plano</h2>
 <form id="fPlanoB">
   <p class="sub" id="pb-info" style="margin-bottom:12px"></p>
@@ -690,6 +704,6 @@
 </form></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="script.js?v=7"></script>
+<script src="script.js?v=8"></script>
 </body>
 </html>
