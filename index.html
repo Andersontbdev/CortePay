@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sistema para barbearias</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=DM+Sans:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 <meta name="color-scheme" content="only light">
 </head>
 <body>
@@ -51,6 +51,7 @@
     <p class="sub">Escolha o serviço, selecione um dia e horário disponível e confirme seu agendamento.</p>
     <form id="form-publico-agendamento">
       <label class="lab" for="pub-servico">Serviço</label><select id="pub-servico" class="f" required><option value="">Carregando serviços...</option></select>
+      <div id="pub-barbeiro-box" hidden><label class="lab" for="pub-barbeiro">Barbeiro</label><select id="pub-barbeiro" class="f"></select></div>
       <label class="lab" for="pub-data">Data</label><input id="pub-data" class="f" type="date" required>
       <label class="lab" for="pub-hora">Horário disponível</label><select id="pub-hora" class="f" required><option value="">Selecione um serviço e uma data</option></select>
       <label class="lab" for="pub-cliente">Seu nome</label><input id="pub-cliente" class="f" autocomplete="name" maxlength="120" required>
@@ -59,6 +60,10 @@
       <p class="err" id="pub-erro" role="alert"></p>
       <button class="btn" id="pub-confirmar" style="width:100%">Confirmar agendamento</button>
     </form>
+    <div id="pub-sucesso" class="public-summary" hidden>
+      <p class="success-message" style="margin:0 0 6px">Agendamento confirmado!</p>
+      <p class="sub" id="pub-sucesso-txt" style="margin:0"></p>
+    </div>
     <p class="lab public-foot">Seu horário só estará reservado após a confirmação nesta tela.</p>
   </section>
 </main>
@@ -85,7 +90,10 @@
 <nav class="tabs" id="tabs" aria-label="Seções">
   <button data-t="painel" aria-pressed="true">Painel</button>
   <button data-t="agenda" id="tab-ag" aria-pressed="false" hidden>Agenda</button>
+  <button data-t="caixa" aria-pressed="false">Caixa</button>
   <button data-t="servicos" aria-pressed="false">Serviços</button>
+  <button data-t="barbeiros" aria-pressed="false">Barbeiros</button>
+  <button data-t="estoque" aria-pressed="false">Estoque</button>
   <button data-t="gastos" aria-pressed="false">Gastos</button>
 </nav>
 
@@ -97,12 +105,17 @@
     <div class="booking-link-row"><input id="link-agendamento" class="f" readonly aria-label="Link público de agendamento"><button class="btn" type="button" id="copiar-link-agendamento">Copiar link</button><a class="btn sec" id="abrir-link-agendamento" target="_blank" rel="noopener">Visualizar</a></div>
     <p class="lab" style="margin-bottom:0">Este bloco só aparece quando a opção “Trabalho com agendamento de horários” estiver ativada nas configurações.</p>
   </section>
+  <section id="card-estoque-baixo" class="card full alerta-card" hidden>
+    <h2>Estoque baixo</h2>
+    <div id="estoque-baixo"></div>
+  </section>
   <section class="card hero gate" aria-label="Lucro">
     <p class="lab">Lucro</p><p class="num big ok" id="luc">-</p>
     <div class="mini">
       <div><p class="lab">Entrou</p><p class="num" id="in">-</p></div>
       <div><p class="lab">Gastos</p><p class="num" id="out">-</p></div>
       <div><p class="lab">Atendimentos</p><p class="num" id="qt">-</p></div>
+      <div><p class="lab">Produtos vendidos</p><p class="num" id="pv">-</p></div>
     </div>
     <div class="bars" id="bars" role="img" aria-label="Entradas por período"></div><div class="ticks" id="ticks"></div>
   </section>
@@ -135,7 +148,8 @@
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
       <div class="acts"><button class="btn sec sm" id="dia-ant" aria-label="Dia anterior">&lt;</button>
         <input id="dia" type="date" class="f" style="width:auto;margin:0">
-        <button class="btn sec sm" id="dia-prox" aria-label="Próximo dia">&gt;</button></div>
+        <button class="btn sec sm" id="dia-prox" aria-label="Próximo dia">&gt;</button>
+        <select id="ag-filtro" class="f" style="width:auto;margin:0" aria-label="Filtrar por barbeiro" hidden></select></div>
       <button class="btn sm" id="novo-ag">Novo horário</button>
     </div>
     <div id="ag"></div>
@@ -153,6 +167,66 @@
     </form>
     <p class="lab" style="margin-bottom:12px">A duração (em minutos) é usada na agenda. Reajustar o preço vale só para os próximos atendimentos.</p>
     <div id="sv"></div>
+  </div>
+</section>
+
+<section id="v-caixa" hidden>
+  <div class="card gate" style="margin-bottom:14px" aria-label="Caixa do dia">
+    <h2>Caixa do dia</h2>
+    <div id="cx"></div>
+  </div>
+  <div class="card gate" aria-label="Caixas anteriores">
+    <h2>Caixas anteriores</h2>
+    <div id="cx-hist"></div>
+  </div>
+</section>
+
+<section id="v-barbeiros" hidden>
+  <div class="card" style="margin-bottom:14px">
+    <h2>Barbeiros</h2>
+    <form id="fBb" class="cols cols-campos">
+      <div><label class="lab" for="bb-n">Nome</label><input class="f" id="bb-n" maxlength="80" required></div>
+      <div><label class="lab" for="bb-t">WhatsApp (opcional)</label><input class="f" id="bb-t" type="tel" maxlength="20"></div>
+      <div><label class="lab" for="bb-cs">% nos serviços</label><input class="f" id="bb-cs" type="number" min="0" max="100" step="0.5" value="40" required></div>
+      <div><label class="lab" for="bb-cp">% nos produtos</label><input class="f" id="bb-cp" type="number" min="0" max="100" step="0.5" value="10" required></div>
+      <div class="cols-botao"><button class="btn">Adicionar</button></div>
+    </form>
+    <p class="lab" style="margin-bottom:12px">Com barbeiros cadastrados, cada atendimento e cada horário da agenda passam a ter um barbeiro, e a comissão é calculada sozinha sobre o valor cobrado.</p>
+    <div id="bb"></div>
+  </div>
+  <div class="card gate" aria-label="Comissões">
+    <div class="titulo-linha">
+      <h2>Comissões</h2>
+      <div class="acts">
+        <label class="lab" for="cm-de">De</label><input id="cm-de" type="date" class="f f-auto">
+        <label class="lab" for="cm-ate">até</label><input id="cm-ate" type="date" class="f f-auto">
+      </div>
+    </div>
+    <div id="cm"></div>
+    <p class="lab" style="margin-top:10px">Vales e pagamentos entram automaticamente nos gastos, na categoria "Comissões e vales". O saldo a receber considera todo o histórico, não só o período.</p>
+  </div>
+</section>
+
+<section id="v-estoque" hidden>
+  <div class="card" style="margin-bottom:14px">
+    <div class="titulo-linha">
+      <h2>Produtos e estoque</h2>
+      <button class="btn sm" id="nova-venda" type="button">Vender produto</button>
+    </div>
+    <form id="fPr" class="cols cols-campos">
+      <div><label class="lab" for="pr-n">Produto</label><input class="f" id="pr-n" maxlength="100" required placeholder="Ex.: Pomada modeladora"></div>
+      <div><label class="lab" for="pr-tp">Tipo</label><select class="f" id="pr-tp"></select></div>
+      <div><label class="lab" for="pr-c">Custo (R$)</label><input class="f" id="pr-c" type="number" min="0" step="0.01" value="0"></div>
+      <div><label class="lab" for="pr-p">Preço de venda (R$)</label><input class="f" id="pr-p" type="number" min="0" step="0.01" value="0"></div>
+      <div><label class="lab" for="pr-m">Avisar com</label><input class="f" id="pr-m" type="number" min="0" step="1" value="2" title="Estoque mínimo"></div>
+      <div class="cols-botao"><button class="btn">Adicionar</button></div>
+    </form>
+    <p class="lab" style="margin-bottom:12px">O estoque começa em zero: use "Entrada" para lançar o que você tem ou comprou. Produtos de "uso interno" (lâminas, toalhas, álcool...) não aparecem para venda. "Avisar com" é a quantidade mínima: abaixo dela o produto aparece no painel.</p>
+    <div id="pr"></div>
+  </div>
+  <div class="card gate" aria-label="Últimas vendas de produtos">
+    <h2>Últimas vendas de produtos</h2>
+    <div id="vd-lista"></div>
   </div>
 </section>
 
@@ -183,8 +257,10 @@
   <label class="lab" for="at-n">Nome do cliente</label><input id="at-n" class="f" autocomplete="name" required>
   <label class="lab" for="at-t">Telefone (com DDD)</label><input id="at-t" class="f" type="tel" autocomplete="tel" placeholder="(11) 91234-5678" required>
   <label class="lab" for="at-s">Serviço</label><select id="at-s" class="f"></select>
+  <div class="so-barbeiros" hidden><label class="lab" for="at-b">Barbeiro</label><select id="at-b" class="f"></select></div>
+  <div class="itens" data-itens="at"></div>
   <label class="lab" for="at-f">Pagamento</label><select id="at-f" class="f"></select>
-  <label class="lab" for="at-d">Desconto (R$)</label><input id="at-d" class="f" type="number" min="0" step="0.01" value="0">
+  <label class="lab" for="at-d">Desconto no serviço (R$)</label><input id="at-d" class="f" type="number" min="0" step="0.01" value="0">
   <div class="kp"><span class="lab">Total a cobrar</span><span class="num" id="at-tot">R$ 0,00</span></div>
   <p class="err" id="at-err" role="alert"></p>
   <div class="acts"><button class="btn">Salvar atendimento</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
@@ -195,6 +271,7 @@
   <label class="lab" for="ag-n">Cliente</label><input id="ag-n" class="f" required>
   <label class="lab" for="ag-t">Telefone (com DDD)</label><input id="ag-t" class="f" type="tel" required>
   <label class="lab" for="ag-s">Serviço</label><select id="ag-s" class="f"></select>
+  <div class="so-barbeiros" hidden><label class="lab" for="ag-b">Barbeiro</label><select id="ag-b" class="f"></select></div>
   <label class="lab" for="ag-dt">Dia</label><input id="ag-dt" class="f" type="date" required>
   <label class="lab" for="ag-h">Horários livres</label><select id="ag-h" class="f"></select>
   <p class="err" id="ag-err" role="alert"></p>
@@ -203,10 +280,93 @@
 
 <dialog id="dCon"><h2>Concluir atendimento</h2>
 <form id="fCon">
+  <p class="sub" id="co-info" style="margin-bottom:12px"></p>
+  <div class="so-barbeiros" hidden><label class="lab" for="co-b">Barbeiro</label><select id="co-b" class="f"></select></div>
+  <div class="itens" data-itens="co"></div>
   <label class="lab" for="co-f">Pagamento</label><select id="co-f" class="f"></select>
-  <label class="lab" for="co-d">Desconto (R$)</label><input id="co-d" class="f" type="number" min="0" step="0.01" value="0">
+  <label class="lab" for="co-d">Desconto no serviço (R$)</label><input id="co-d" class="f" type="number" min="0" step="0.01" value="0">
+  <div class="kp"><span class="lab">Total a cobrar</span><span class="num" id="co-tot">R$ 0,00</span></div>
   <p class="err" id="co-err" role="alert"></p>
   <div class="acts"><button class="btn">Concluir</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dBbCom"><h2 id="bbc-tit">Comissão por serviço</h2>
+<form id="fBbCom">
+  <p class="lab" style="margin-bottom:12px">Deixe em branco para usar a % padrão do barbeiro. Preencha só os serviços com % diferente.</p>
+  <div id="bbc-lista"></div>
+  <p class="err" id="bbc-err" role="alert"></p>
+  <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dBbLanc"><h2 id="bbl-tit">Vale</h2>
+<form id="fBbLanc">
+  <p class="sub" id="bbl-info" style="margin-bottom:12px"></p>
+  <label class="lab" for="bbl-v">Valor (R$)</label><input id="bbl-v" class="f" type="number" min="0.01" step="0.01" required>
+  <label class="lab" for="bbl-d">Observação (opcional)</label><input id="bbl-d" class="f" maxlength="150">
+  <p class="lab">Esse valor também entra nos gastos, como "Comissões e vales".</p>
+  <p class="err" id="bbl-err" role="alert"></p>
+  <div class="acts"><button class="btn">Confirmar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dProd"><h2>Editar produto</h2>
+<form id="fProd">
+  <label class="lab" for="pd-n">Produto</label><input id="pd-n" class="f" maxlength="100" required>
+  <label class="lab" for="pd-tp">Tipo</label><select id="pd-tp" class="f"></select>
+  <div class="cols">
+    <div><label class="lab" for="pd-c">Custo (R$)</label><input id="pd-c" class="f" type="number" min="0" step="0.01" required></div>
+    <div><label class="lab" for="pd-p">Preço de venda (R$)</label><input id="pd-p" class="f" type="number" min="0" step="0.01" required></div>
+    <div><label class="lab" for="pd-m">Avisar com</label><input id="pd-m" class="f" type="number" min="0" step="1" required></div>
+  </div>
+  <label style="display:flex;gap:8px;align-items:center;margin:0 0 12px"><input id="pd-a" type="checkbox"> Produto ativo</label>
+  <p class="err" id="pd-err" role="alert"></p>
+  <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dMov"><h2 id="mv-tit">Movimentar estoque</h2>
+<form id="fMov">
+  <p class="sub" id="mv-info" style="margin-bottom:12px"></p>
+  <label class="lab" for="mv-t">Tipo</label>
+  <select id="mv-t" class="f">
+    <option value="ENTRADA">Entrada (compra ou reposição)</option>
+    <option value="CONSUMO">Uso interno (saída)</option>
+    <option value="AJUSTE">Ajuste (corrigir pela contagem)</option>
+  </select>
+  <label class="lab" for="mv-q" id="mv-q-lab">Quantidade</label><input id="mv-q" class="f" type="number" min="0" step="1" required>
+  <div id="mv-entrada">
+    <label class="lab" for="mv-c">Custo por unidade (R$)</label><input id="mv-c" class="f" type="number" min="0" step="0.01">
+    <label style="display:flex;gap:8px;align-items:center;margin:0 0 12px"><input id="mv-g" type="checkbox" checked> Lançar a compra nos gastos (categoria Produtos)</label>
+  </div>
+  <label class="lab" for="mv-o">Observação (opcional)</label><input id="mv-o" class="f" maxlength="200">
+  <p class="err" id="mv-err" role="alert"></p>
+  <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dHist"><h2 id="hs-tit">Histórico</h2>
+  <div id="hs-lista" class="lista-rolagem"></div>
+  <div class="acts" style="margin-top:12px"><button class="btn sec" type="button" data-close>Fechar</button></div>
+</dialog>
+
+<dialog id="dVenda"><h2>Vender produto</h2>
+<form id="fVenda">
+  <div class="itens" data-itens="vd"></div>
+  <div class="so-barbeiros" hidden><label class="lab" for="vd-b">Quem vendeu (para a comissão)</label><select id="vd-b" class="f"></select></div>
+  <label class="lab" for="vd-f">Pagamento</label><select id="vd-f" class="f"></select>
+  <details class="opcional"><summary>Cliente (opcional)</summary>
+    <label class="lab" for="vd-n">Nome</label><input id="vd-n" class="f" autocomplete="off">
+    <label class="lab" for="vd-t">Telefone (com DDD)</label><input id="vd-t" class="f" type="tel" autocomplete="off">
+  </details>
+  <div class="kp"><span class="lab">Total a cobrar</span><span class="num" id="vd-tot">R$ 0,00</span></div>
+  <p class="err" id="vd-err" role="alert"></p>
+  <div class="acts"><button class="btn">Confirmar venda</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
+</form></dialog>
+
+<dialog id="dCxMov"><h2 id="cxm-tit">Sangria</h2>
+<form id="fCxMov">
+  <p class="lab" id="cxm-info" style="margin-bottom:12px"></p>
+  <label class="lab" for="cxm-v">Valor (R$)</label><input id="cxm-v" class="f" type="number" min="0.01" step="0.01" required>
+  <label class="lab" for="cxm-d">Motivo (opcional)</label><input id="cxm-d" class="f" maxlength="150">
+  <p class="err" id="cxm-err" role="alert"></p>
+  <div class="acts"><button class="btn">Confirmar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
 </form></dialog>
 
 <dialog id="dCfg"><h2>Configurar barbearia</h2>
@@ -313,6 +473,6 @@
 </form></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="script.js"></script>
+<script src="script.js?v=4"></script>
 </body>
 </html>

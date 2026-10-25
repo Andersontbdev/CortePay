@@ -215,3 +215,41 @@ body:has(#tela-convite:not([hidden])) .pole{position:fixed;top:0;left:0;right:0;
 .login-card a {
   color: #9ec5ff !important;
 }
+/* ===== Atualização 1: barbeiros, estoque, comanda e caixa ===== */
+.titulo-linha{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.titulo-linha h2{margin-bottom:0}
+.titulo-linha .acts .lab{margin:0}
+.f-auto{width:auto;margin:0}
+.cols-campos{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));align-items:end}
+.cols-campos .lab{margin-bottom:2px}
+.cols-botao .btn{width:100%}
+.alerta-card{border-color:var(--warn)}
+.itens{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:4px 0 12px}
+.itens[hidden]{display:none}
+.itens-add{display:flex;gap:8px;align-items:center}
+.itens-add .f{margin:0}
+.itens-add .it-qtd{width:76px;flex:none}
+.it-lista .row2{padding:6px 0}
+.it-lista .who small{display:block}
+.btn-x{border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:8px;width:30px;height:30px;cursor:pointer;flex:none}
+.lista-rolagem{max-height:55vh;overflow:auto}
+details.opcional{margin:0 0 12px}
+details.opcional summary{cursor:pointer;color:var(--blue);font-size:14px;margin-bottom:8px}
+.edit-linha .f{margin:0}
+.edit-linha .nome{flex:2;min-width:140px}
+.edit-linha .pct{width:84px}
+.edit-linha .tel{width:150px}
+.cx-total{font-size:clamp(30px,6vw,44px);margin:4px 0 2px}
+.cx-acoes{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.num-linha{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 0}
+.num-linha div{min-width:110px}
+.num-linha .num{font-size:18px}
+.saldo{font-weight:700}
+@media(max-width:600px){
+  .itens-add{flex-wrap:wrap}
+  .itens-add .it-prod{flex:1 1 100%}
+  .itens-add .it-add{flex:1}
+  .edit-linha .nome,.edit-linha .tel{flex:1 1 100%;width:100%}
+  .titulo-linha .acts{width:100%}
+  .titulo-linha .acts .f-auto{flex:1;min-width:0}
+}

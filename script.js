@@ -73,7 +73,10 @@ function intervalo(p) {
   return [iso(new Date(h.getFullYear(), h.getMonth(), 1, 12)), iso(new Date(h.getFullYear(), h.getMonth() + 1, 0, 12))];
 }
 const FORMAS = {PIX: 'Pix', DINHEIRO: 'Dinheiro', DEBITO: 'Débito', CREDITO: 'Crédito'};
-const CATS = {ALUGUEL: 'Aluguel', PRODUTOS: 'Produtos', ENERGIA: 'Energia', AGUA: 'Água', OUTROS: 'Outros'};
+const CATS = {ALUGUEL: 'Aluguel', PRODUTOS: 'Produtos', ENERGIA: 'Energia', AGUA: 'Água', COMISSOES: 'Comissões e vales', OUTROS: 'Outros'};
+const TIPOS_PROD = {VENDA: 'Para venda', USO: 'Uso interno', AMBOS: 'Venda e uso interno'};
+const qtd = n => Number(n || 0).toLocaleString('pt-BR', {maximumFractionDigits: 3});
+const dataHoraBR = s => new Date(s).toLocaleString('pt-BR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
 const STATUS = {AGENDADO: 'Agendado', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado', FALTOU: 'Faltou'};
 const DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const opcoes = obj => Object.entries(obj).map(([k, v]) => `<option value="${esc(k)}">${esc(v)}</option>`).join('');
@@ -135,7 +138,9 @@ async function entrar() {
 }
 
 // ======================= BARBEARIA =======================
-let INFO, PER = 'semana', SERV = [], ATR = [], DIA = hojeISO(), CONCLUIR = null, NOVALOGO = null;
+let INFO, PER = 'semana', SERV = [], ATR = [], DIA = hojeISO(), CONCLUIR = null, NOVALOGO = null, AGENDA = [];
+let BARB = [], PROD = [];
+const BARB_ATIVOS = () => BARB.filter(b => b.ativo);
 
 function marca() {
   $('#bn').textContent = INFO.nome;
@@ -160,11 +165,15 @@ function marca() {
 async function painel() {
   if (INFO.restrito) return;
   const [i0, i1] = intervalo(PER);
-  const [at, ds] = await Promise.all([
+  const [ats, ds, vds] = await Promise.all([
     sb.from('atendimento').select('valor_final,forma_pagamento,data_hora').gte('data_hora', i0 + 'T00:00:00').lt('data_hora', maisDia(i1, 1) + 'T00:00:00').limit(5000).then(ok),
-    sb.from('despesa').select('categoria,valor').gte('data_despesa', i0).lte('data_despesa', i1).limit(5000).then(ok)]);
+    sb.from('despesa').select('categoria,valor').gte('data_despesa', i0).lte('data_despesa', i1).limit(5000).then(ok),
+    sb.from('venda_item').select('valor_total,forma_pagamento,data_hora').gte('data_hora', i0 + 'T00:00:00').lt('data_hora', maisDia(i1, 1) + 'T00:00:00').limit(5000).then(ok)]);
+  // Entradas = atendimentos + produtos vendidos (com ou sem atendimento)
+  const at = ats.concat(vds.map(v => ({valor_final: v.valor_total, forma_pagamento: v.forma_pagamento, data_hora: v.data_hora})));
   const entrou = soma(at.map(a => a.valor_final)), gastos = soma(ds.map(d => d.valor)), lucro = entrou - gastos;
-  $('#luc').textContent = brl(lucro); $('#in').textContent = brl(entrou); $('#out').textContent = brl(gastos); $('#qt').textContent = at.length;
+  $('#luc').textContent = brl(lucro); $('#in').textContent = brl(entrou); $('#out').textContent = brl(gastos); $('#qt').textContent = ats.length;
+  $('#pv').textContent = brl(soma(vds.map(v => v.valor_total)));
   const serie = new Map();
   if (PER === 'hoje') { [...new Set(at.map(a => +a.data_hora.slice(11, 13)))].sort((x, y) => x - y).forEach(h => serie.set(h + 'h', 0)); }
   else if (PER === 'semana') DIAS.forEach(d => serie.set(d, 0));
@@ -182,28 +191,30 @@ async function painel() {
   const cats = Object.entries(cat).sort((a, b) => b[1] - a[1]);
   $('#gst').innerHTML = cats.length ? cats.map(([c, v]) => { const pc = Math.round(v / (gastos || 1) * 100); return linha(CATS[c] || c, brl(v) + ' (' + pc + '%)', pc, 'red'); }).join('') : vazio('Nenhum gasto neste período.');
   $('#kpi').innerHTML = kp('Gastos sobre o que entrou', (entrou ? Math.round(gastos / entrou * 100) : 0) + '%') + kp('Margem de lucro', (entrou ? Math.round(lucro / entrou * 100) : 0) + '%')
-    + kp('Maior gasto', cats.length ? CATS[cats[0][0]] : '-') + kp('Gasto por atendimento', brl(at.length ? gastos / at.length : 0));
+    + kp('Maior gasto', cats.length ? CATS[cats[0][0]] : '-') + kp('Gasto por atendimento', brl(ats.length ? gastos / ats.length : 0));
 }
 
 async function recentes() {
   if (INFO.restrito) return;
-  const l = await sb.from('atendimento').select('id,valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
-  $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b><button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="ENTRADA" data-id="${a.id}" aria-label="Excluir entrada de ${esc(a.cliente?.nome || 'cliente')}">Excluir</button></div>`).join('') : vazio('Nenhum atendimento ainda.');
+  const l = await sb.from('atendimento').select('id,valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome),barbeiro(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
+  $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${a.barbeiro?.nome ? ' · ' + esc(a.barbeiro.nome) : ''}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b><button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="ENTRADA" data-id="${a.id}" aria-label="Excluir entrada de ${esc(a.cliente?.nome || 'cliente')}">Excluir</button></div>`).join('') : vazio('Nenhum atendimento ainda.');
 }
 
 // Excluir entradas (atendimentos) e saídas (gastos) com confirmação.
 // A exclusão é feita por uma função SQL que valida a barbearia vinculada ao usuário.
 async function excluirLancamento(tipo, id) {
-  const ehEntrada = tipo === 'ENTRADA';
+  const ehEntrada = tipo === 'ENTRADA', ehVenda = tipo === 'VENDA';
   const pergunta = ehEntrada
-    ? 'Deseja realmente excluir esta entrada? Se ela veio de um agendamento, o horário relacionado também será cancelado.'
+    ? 'Deseja realmente excluir esta entrada? Se ela veio de um agendamento, o horário relacionado também será cancelado. Produtos vendidos junto voltam para o estoque.'
+    : ehVenda ? 'Deseja realmente excluir esta venda? O produto volta para o estoque.'
     : 'Deseja realmente excluir esta saída/gasto?';
   if (!confirm(pergunta)) return;
   await rpc('excluir_lancamento', {p_tipo: tipo, p_id: Number(id)});
-  toast(ehEntrada ? 'Entrada excluída.' : 'Saída excluída.');
-  if (ehEntrada) {
+  toast(ehEntrada ? 'Entrada excluída.' : ehVenda ? 'Venda excluída.' : 'Saída excluída.');
+  if (ehEntrada || ehVenda) {
     tudoDoPainel();
     seguro(agenda);
+    if (ehVenda) seguro(estoque);
   } else {
     await gastos();
     seguro(painel);
@@ -304,17 +315,27 @@ async function resultado() {
   const ult = itens.sort((a, b) => b.c.enviado_em.localeCompare(a.c.enviado_em)).slice(0, 5);
   $('#ms').innerHTML = ult.length ? ult.map(u => `<div class="row2"><span class="av">${esc((nomes[u.c.cliente_id] || '?')[0])}</span><div class="who"><b>${esc(nomes[u.c.cliente_id])}</b><small>${esc(u.c.promocao)}</small></div><span class="chip">${sit[u.s]}${u.d != null ? ' em ' + u.d + ' dias' : ''}</span></div>`).join('') : vazio('Nenhuma mensagem enviada.');
 }
-function tudoDoPainel() { marca(); [painel, recentes, ranking, atrasados, resultado].forEach(f => seguro(f)); }
+function tudoDoPainel() { marca(); [painel, recentes, ranking, atrasados, resultado, carregarBase].forEach(f => seguro(f)); }
 
 // ---------- Agenda ----------
 async function agenda() {
   if (!INFO.usa_agendamento) return;
   $('#dia').value = DIA;
-  const l = await sb.from('agendamento').select('id,inicio,fim,status,cliente(nome,telefone),servico(nome)').gte('inicio', DIA + 'T00:00:00').lt('inicio', maisDia(DIA, 1) + 'T00:00:00').order('inicio').then(ok);
+  const filtro = $('#ag-filtro');
+  filtro.hidden = !BARB_ATIVOS().length;
+  if (!filtro.hidden) {
+    const atual = filtro.value;
+    filtro.innerHTML = '<option value="">Todos os barbeiros</option>' + BARB_ATIVOS().map(b => `<option value="${b.id}">${esc(b.nome)}</option>`).join('');
+    filtro.value = BARB_ATIVOS().some(b => String(b.id) === atual) ? atual : '';
+  }
+  let q = sb.from('agendamento').select('id,inicio,fim,status,barbeiro_id,cliente(nome,telefone),servico(nome,preco),barbeiro(nome)').gte('inicio', DIA + 'T00:00:00').lt('inicio', maisDia(DIA, 1) + 'T00:00:00').order('inicio');
+  if (!filtro.hidden && filtro.value) q = q.eq('barbeiro_id', Number(filtro.value));
+  const l = AGENDA = await q.then(ok);
   $('#ag').innerHTML = l.length ? l.map(a => {
-    const nome = a.cliente?.nome || '', msg = `Olá, ${nome.split(' ')[0]}! Confirmando seu horário (${a.servico?.nome}) no dia ${dataBR(a.inicio)} às ${hora(a.inicio)} na ${INFO.nome}. Pode confirmar?`;
+    const nome = a.cliente?.nome || '', com = a.barbeiro?.nome ? ` com ${a.barbeiro.nome}` : '';
+    const msg = `Olá, ${nome.split(' ')[0]}! Confirmando seu horário (${a.servico?.nome}${com}) no dia ${dataBR(a.inicio)} às ${hora(a.inicio)} na ${INFO.nome}. Pode confirmar?`;
     return `<div class="row2"><div style="min-width:92px"><b>${hora(a.inicio)}</b><br><small class="lab">até ${hora(a.fim)}</small></div>
-      <div class="who"><b>${esc(nome)}</b><small>${esc(a.servico?.nome)}</small></div>
+      <div class="who"><b>${esc(nome)}</b><small>${esc(a.servico?.nome)}${a.barbeiro?.nome ? ' · ' + esc(a.barbeiro.nome) : ''}</small></div>
       <span class="chip${a.status === 'CONCLUIDO' ? ' ok' : a.status === 'AGENDADO' ? '' : ' red'}">${STATUS[a.status]}</span>
       ${a.status === 'AGENDADO' ? `<div class="acts"><a class="wa" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(a.cliente?.telefone))}?text=${encodeURIComponent(msg)}">Confirmar no WhatsApp</a>
       <button class="btn sm" data-a="concluir" data-id="${a.id}">Concluir</button>
@@ -325,7 +346,11 @@ async function agenda() {
 async function livres() {
   const sv = SERV.find(x => String(x.id) === $('#ag-s').value), d = $('#ag-dt').value;
   if (!sv || !d) return;
-  const m = await sb.from('agendamento').select('inicio,fim').eq('status', 'AGENDADO').gte('inicio', d + 'T00:00:00').lt('inicio', maisDia(d, 1) + 'T00:00:00').then(ok);
+  // Com barbeiros, cada um tem a própria agenda; sem barbeiros, a agenda é única
+  const brb = BARB_ATIVOS().length ? Number($('#ag-b').value) || null : null;
+  if (BARB_ATIVOS().length && !brb) { $('#ag-h').innerHTML = '<option value="">Escolha o barbeiro</option>'; return; }
+  const m = (await sb.from('agendamento').select('inicio,fim,barbeiro_id').eq('status', 'AGENDADO').gte('inicio', d + 'T00:00:00').lt('inicio', maisDia(d, 1) + 'T00:00:00').then(ok))
+    .filter(x => (x.barbeiro_id ?? null) === brb);
   const min = h => +h.slice(0, 2) * 60 + +h.slice(3, 5), ocup = m.map(x => [min(x.inicio.slice(11, 16)), min(x.fim.slice(11, 16))]);
   const ag = new Date(), ja = d === iso(ag) ? ag.getHours() * 60 + ag.getMinutes() : -1, out = [];
   for (let t = min(INFO.abre); t + sv.duracao_min <= min(INFO.fecha); t += 30) {
@@ -354,8 +379,9 @@ async function gastos() {
 // ---------- Navegação e eventos ----------
 function aba(nome) {
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === nome)));
-  ['painel', 'agenda', 'servicos', 'gastos'].forEach(n => $('#v-' + n).hidden = n !== nome);
-  if (nome === 'agenda') seguro(agenda); if (nome === 'servicos') seguro(servicos); if (nome === 'gastos') seguro(gastos);
+  ['painel', 'agenda', 'caixa', 'servicos', 'barbeiros', 'estoque', 'gastos'].forEach(n => $('#v-' + n).hidden = n !== nome);
+  const carregar = {agenda, servicos, gastos, barbeiros, estoque, caixa}[nome];
+  if (carregar) seguro(carregar);
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) aba(b.dataset.t); });
 $('#per').addEventListener('click', e => {
@@ -398,56 +424,78 @@ $('#at-cliente-existente').addEventListener('change', () => {
 }));
 
 // Novo atendimento
+function totalServico(preco, idDesc) {
+  const p = Number(preco) || 0, d = Math.min(Math.max(Number($(idDesc).value) || 0, 0), p);
+  return p - d;
+}
 function totalAt() {
-  const s = SERV.find(x => String(x.id) === $('#at-s').value), d = Math.min(Math.max(Number($('#at-d').value) || 0, 0), s ? Number(s.preco) : 0);
-  $('#at-tot').textContent = brl(s ? Number(s.preco) - d : 0);
+  const s = SERV.find(x => String(x.id) === $('#at-s').value);
+  $('#at-tot').textContent = brl((s ? totalServico(s.preco, '#at-d') : 0) + totalItens('at'));
 }
 $('#novo').addEventListener('click', () => seguro(async () => {
-  await Promise.all([carregarServicos(), carregarClientesAtendimento()]);
+  await Promise.all([carregarServicos(), carregarClientesAtendimento(), carregarBase()]);
   if (!SERV.length) { toast('Cadastre ao menos um serviço antes, na aba Serviços.', true); aba('servicos'); return; }
   $('#at-s').innerHTML = SERV.map(s => `<option value="${s.id}">${esc(s.nome)} (${brl(s.preco)})</option>`).join('');
   $('#at-f').innerHTML = opcoes(FORMAS); $('#at-err').textContent = '';
-  $('#at-cliente-existente').value = ''; $('#at-n').value = ''; $('#at-t').value = '';
+  $('#at-cliente-existente').value = ''; $('#at-n').value = ''; $('#at-t').value = ''; $('#at-d').value = 0;
   $('#at-cliente-ajuda').textContent = 'Selecione um cliente salvo para preencher nome e telefone automaticamente.';
+  preencherBarbeiros('#at-b'); iniciarItens('at', totalAt);
   totalAt(); $('#dAt').showModal();
 }));
 ['at-s', 'at-d'].forEach(i => $('#' + i).addEventListener('input', totalAt));
 $('#fAt').addEventListener('submit', async e => {
   e.preventDefault(); $('#at-err').textContent = '';
+  const b = e.submitter || $('#fAt button:not([type])'); b.disabled = true;
   try {
-    await rpc('registrar_atendimento', {p_nome: $('#at-n').value, p_telefone: $('#at-t').value, p_servico: Number($('#at-s').value), p_desconto: Number($('#at-d').value) || 0, p_forma: $('#at-f').value});
+    await rpc('registrar_atendimento_v2', {p_nome: $('#at-n').value, p_telefone: $('#at-t').value, p_servico: Number($('#at-s').value),
+      p_desconto: Number($('#at-d').value) || 0, p_forma: $('#at-f').value, p_barbeiro: barbeiroEscolhido('#at-b'), p_produtos: itensParaEnviar('at')});
     $('#dAt').close(); $('#fAt').reset(); $('#at-cliente-ajuda').textContent = 'Selecione um cliente salvo para preencher nome e telefone automaticamente.'; toast('Atendimento salvo.'); tudoDoPainel();
   } catch (x) { $('#at-err').textContent = x.message; }
+  finally { b.disabled = false; }
 });
 
 // Agenda
 $('#dia').addEventListener('change', e => { DIA = e.target.value || hojeISO(); seguro(agenda); });
 $('#dia-ant').addEventListener('click', () => { DIA = maisDia(DIA, -1); seguro(agenda); });
 $('#dia-prox').addEventListener('click', () => { DIA = maisDia(DIA, 1); seguro(agenda); });
+$('#ag-filtro').addEventListener('change', () => seguro(agenda));
 $('#novo-ag').addEventListener('click', () => seguro(async () => {
-  await carregarServicos();
+  await Promise.all([carregarServicos(), carregarBase()]);
   if (!SERV.length) { toast('Cadastre ao menos um serviço antes, na aba Serviços.', true); aba('servicos'); return; }
   $('#ag-s').innerHTML = SERV.map(s => `<option value="${s.id}">${esc(s.nome)} (${s.duracao_min} min)</option>`).join('');
+  preencherBarbeiros('#ag-b', $('#ag-filtro').value);
   $('#ag-dt').value = DIA; $('#ag-err').textContent = ''; await livres(); $('#dAg').showModal();
 }));
-['ag-s', 'ag-dt'].forEach(i => $('#' + i).addEventListener('change', () => seguro(livres)));
+['ag-s', 'ag-dt', 'ag-b'].forEach(i => $('#' + i).addEventListener('change', () => seguro(livres)));
 $('#fAg').addEventListener('submit', async e => {
   e.preventDefault(); $('#ag-err').textContent = '';
   if (!$('#ag-h').value) { $('#ag-err').textContent = 'Escolha um horário livre.'; return; }
   try {
-    await rpc('agenda_marcar', {p_nome: $('#ag-n').value, p_telefone: $('#ag-t').value, p_servico: Number($('#ag-s').value), p_inicio: $('#ag-dt').value + 'T' + $('#ag-h').value + ':00'});
+    await rpc('agenda_marcar_v2', {p_nome: $('#ag-n').value, p_telefone: $('#ag-t').value, p_servico: Number($('#ag-s').value),
+      p_inicio: $('#ag-dt').value + 'T' + $('#ag-h').value + ':00', p_barbeiro: barbeiroEscolhido('#ag-b')});
     DIA = $('#ag-dt').value; $('#dAg').close(); $('#fAg').reset(); toast('Horário marcado.'); seguro(agenda);
   } catch (x) { $('#ag-err').textContent = x.message; }
 });
+let CONCLUIR_SERV = null;
+function totalCon() { $('#co-tot').textContent = brl(totalServico(CONCLUIR_SERV?.preco, '#co-d') + totalItens('co')); }
+$('#co-d').addEventListener('input', totalCon);
 $('#ag').addEventListener('click', e => {
   const b = e.target.closest('button[data-a]'); if (!b) return;
-  if (b.dataset.a === 'concluir') { CONCLUIR = b.dataset.id; $('#co-f').innerHTML = opcoes(FORMAS); $('#co-d').value = 0; $('#co-err').textContent = ''; $('#dCon').showModal(); return; }
+  if (b.dataset.a === 'concluir') {
+    const a = AGENDA.find(x => String(x.id) === b.dataset.id);
+    CONCLUIR = b.dataset.id; CONCLUIR_SERV = a?.servico || null;
+    $('#co-info').textContent = a ? `${a.cliente?.nome || ''} · ${a.servico?.nome || ''} · ${hora(a.inicio)}` : '';
+    $('#co-f').innerHTML = opcoes(FORMAS); $('#co-d').value = 0; $('#co-err').textContent = '';
+    preencherBarbeiros('#co-b', a?.barbeiro_id); iniciarItens('co', totalCon); totalCon();
+    $('#dCon').showModal(); return;
+  }
   seguro(async () => { await sb.from('agendamento').update({status: b.dataset.a}).eq('id', Number(b.dataset.id)).then(ok); await agenda(); });
 });
 $('#fCon').addEventListener('submit', async e => {
-  e.preventDefault();
+  e.preventDefault(); $('#co-err').textContent = '';
   try {
-    await rpc('agenda_concluir', {p_id: Number(CONCLUIR), p_desconto: Number($('#co-d').value) || 0, p_forma: $('#co-f').value});
+    await rpc('agenda_concluir_v2', {p_id: Number(CONCLUIR), p_desconto: Number($('#co-d').value) || 0, p_forma: $('#co-f').value,
+      p_barbeiro: barbeiroEscolhido('#co-b'), p_produtos: itensParaEnviar('co')});
     $('#dCon').close(); toast('Atendimento concluído.'); seguro(agenda); tudoDoPainel();
   } catch (x) { $('#co-err').textContent = x.message; }
 });
@@ -513,6 +561,333 @@ $('#fCfg').addEventListener('submit', async e => {
     const b = await sb.from('barbearia').select('id,nome,logo,vencimento,usa_agendamento,abre,fecha').maybeSingle().then(ok);
     INFO = {...INFO, ...b}; $('#dCfg').close(); marca(); toast('Configuração salva.');
   } catch (x) { $('#cf-err').textContent = x.message; }
+});
+
+// ======================= BARBEIROS, PRODUTOS, COMANDA E CAIXA =======================
+async function carregarBase() {
+  [BARB, PROD] = await Promise.all([
+    sb.from('barbeiro').select('id,nome,telefone,comissao_servico,comissao_produto,ativo').order('nome').then(ok),
+    sb.from('produto').select('id,nome,tipo,unidade,custo,preco_venda,estoque,estoque_minimo,ativo').order('nome').then(ok)]);
+  const baixo = PROD.filter(p => p.ativo && Number(p.estoque) <= Number(p.estoque_minimo));
+  $('#card-estoque-baixo').hidden = !baixo.length;
+  $('#estoque-baixo').innerHTML = baixo.map(p => `<div class="row2"><div class="who"><b>${esc(p.nome)}</b><small>${esc(TIPOS_PROD[p.tipo])}</small></div><span class="chip red">${qtd(p.estoque)} ${esc(p.unidade)} (mínimo ${qtd(p.estoque_minimo)})</span><button class="btn sec sm" type="button" data-ir-estoque>Ver estoque</button></div>`).join('');
+}
+$('#estoque-baixo').addEventListener('click', e => { if (e.target.closest('[data-ir-estoque]')) aba('estoque'); });
+
+// Select de barbeiro nos formulários (some quando não há barbeiros cadastrados)
+function preencherBarbeiros(sel, escolhido) {
+  const el = $(sel), lista = BARB_ATIVOS(), opcional = sel === '#vd-b';
+  el.closest('.so-barbeiros').hidden = !lista.length;
+  el.innerHTML = (opcional ? '<option value="">Sem comissão</option>' : lista.length > 1 ? '<option value="">Escolha o barbeiro</option>' : '')
+    + lista.map(b => `<option value="${b.id}">${esc(b.nome)}</option>`).join('');
+  if (escolhido && lista.some(b => String(b.id) === String(escolhido))) el.value = String(escolhido);
+}
+const barbeiroEscolhido = sel => BARB_ATIVOS().length ? Number($(sel).value) || null : null;
+
+// ---------- Produtos vendidos junto (comanda) ----------
+const ITENS = {at: [], co: [], vd: []}, AO_MUDAR = {};
+const vendaveis = () => PROD.filter(p => p.ativo && p.tipo !== 'USO');
+function iniciarItens(k, aoMudar) {
+  ITENS[k] = []; AO_MUDAR[k] = aoMudar;
+  const box = document.querySelector(`[data-itens="${k}"]`), lista = vendaveis();
+  box.hidden = !lista.length && k !== 'vd';
+  box.innerHTML = `<label class="lab">${k === 'vd' ? 'Produtos' : 'Produtos vendidos junto (opcional)'}</label>
+    <div class="itens-add"><select class="f it-prod" aria-label="Produto">${lista.length ? lista.map(p => `<option value="${p.id}"${Number(p.estoque) <= 0 ? ' disabled' : ''}>${esc(p.nome)} · ${brl(p.preco_venda)} (${qtd(p.estoque)} em estoque)</option>`).join('') : '<option value="">Nenhum produto para venda</option>'}</select>
+    <input class="f it-qtd" type="number" min="1" step="1" value="1" aria-label="Quantidade"><button type="button" class="btn sec sm it-add">Adicionar</button></div>
+    <div class="it-lista"></div>`;
+  const primeiro = lista.find(p => Number(p.estoque) > 0); if (primeiro) box.querySelector('.it-prod').value = primeiro.id;
+  desenharItens(k);
+}
+function desenharItens(k) {
+  const box = document.querySelector(`[data-itens="${k}"]`);
+  box.querySelector('.it-lista').innerHTML = ITENS[k].map((i, n) => {
+    const p = PROD.find(x => x.id === i.id);
+    return `<div class="row2"><div class="who"><b>${esc(p?.nome)}</b><small>${qtd(i.q)} x ${brl(p?.preco_venda)}</small></div><b>${brl(Number(p?.preco_venda) * i.q)}</b><button type="button" class="btn-x" data-rm="${n}" aria-label="Remover">✕</button></div>`;
+  }).join('');
+  AO_MUDAR[k]?.();
+}
+const totalItens = k => soma(ITENS[k].map(i => Number(PROD.find(p => p.id === i.id)?.preco_venda || 0) * i.q));
+const itensParaEnviar = k => ITENS[k].map(i => ({produto_id: i.id, quantidade: i.q}));
+document.addEventListener('click', e => {
+  const box = e.target.closest('[data-itens]'); if (!box) return;
+  const k = box.dataset.itens;
+  if (e.target.closest('.it-add')) {
+    const id = Number(box.querySelector('.it-prod').value), q = Number(box.querySelector('.it-qtd').value);
+    const p = PROD.find(x => x.id === id);
+    if (!p) return;
+    if (!(q > 0)) { toast('Informe a quantidade.', true); return; }
+    const ja = ITENS[k].find(i => i.id === id), total = (ja ? ja.q : 0) + q;
+    if (total > Number(p.estoque)) { toast(`Só há ${qtd(p.estoque)} ${p.unidade} de ${p.nome} em estoque.`, true); return; }
+    if (ja) ja.q = total; else ITENS[k].push({id, q});
+    box.querySelector('.it-qtd').value = 1; desenharItens(k);
+  }
+  const rm = e.target.closest('[data-rm]');
+  if (rm) { ITENS[k].splice(Number(rm.dataset.rm), 1); desenharItens(k); }
+});
+
+// ---------- Barbeiros ----------
+async function barbeiros() {
+  await carregarBase();
+  $('#bb').innerHTML = BARB.length ? BARB.map(b => `<div class="row2 edit-linha" data-id="${b.id}">
+    <input class="f nome" value="${esc(b.nome)}" aria-label="Nome" maxlength="80">
+    <input class="f tel" value="${esc(b.telefone || '')}" type="tel" aria-label="WhatsApp" placeholder="WhatsApp" maxlength="20">
+    <label class="lab">Serviços %<input class="f pct" type="number" min="0" max="100" step="0.5" value="${Number(b.comissao_servico)}"></label>
+    <label class="lab">Produtos %<input class="f pct" type="number" min="0" max="100" step="0.5" value="${Number(b.comissao_produto)}"></label>
+    ${b.ativo ? '' : '<span class="chip">Inativo</span>'}
+    <div class="acts"><button class="btn sm" data-a="salvar">Salvar</button><button class="btn sec sm" data-a="com">% por serviço</button>
+    <button class="btn sec sm" data-a="ativo">${b.ativo ? 'Desativar' : 'Reativar'}</button></div></div>`).join('')
+    : vazio('Nenhum barbeiro cadastrado. Enquanto não houver barbeiros, a agenda continua única, como antes.');
+  await comissoes();
+}
+$('#fBb').addEventListener('submit', e => {
+  e.preventDefault();
+  seguro(async () => {
+    await sb.from('barbeiro').insert({nome: $('#bb-n').value.trim(), telefone: $('#bb-t').value.trim() || null,
+      comissao_servico: Number($('#bb-cs').value) || 0, comissao_produto: Number($('#bb-cp').value) || 0}).then(ok);
+    $('#bb-n').value = ''; $('#bb-t').value = ''; toast('Barbeiro cadastrado.'); await barbeiros();
+  });
+});
+let BB_COM = null;
+$('#bb').addEventListener('click', e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const lin = b.closest('[data-id]'), id = Number(lin.dataset.id), bb = BARB.find(x => x.id === id), c = lin.querySelectorAll('input');
+  seguro(async () => {
+    if (b.dataset.a === 'salvar') {
+      await sb.from('barbeiro').update({nome: c[0].value.trim(), telefone: c[1].value.trim() || null,
+        comissao_servico: Number(c[2].value) || 0, comissao_produto: Number(c[3].value) || 0}).eq('id', id).then(ok);
+      toast('Barbeiro salvo.');
+    } else if (b.dataset.a === 'ativo') {
+      if (bb.ativo && !confirm(`Desativar ${bb.nome}? Ele deixa de aparecer na agenda e no link de agendamento. O histórico e as comissões continuam guardados.`)) return;
+      await sb.from('barbeiro').update({ativo: !bb.ativo}).eq('id', id).then(ok);
+    } else if (b.dataset.a === 'com') {
+      await carregarServicos();
+      const atuais = await sb.from('barbeiro_comissao_servico').select('servico_id,percentual').eq('barbeiro_id', id).then(ok);
+      BB_COM = {id, atuais: Object.fromEntries(atuais.map(a => [a.servico_id, Number(a.percentual)]))};
+      $('#bbc-tit').textContent = 'Comissão por serviço · ' + bb.nome; $('#bbc-err').textContent = '';
+      $('#bbc-lista').innerHTML = SERV.length ? SERV.map(s => `<div class="row2"><div class="who"><b>${esc(s.nome)}</b><small>${brl(s.preco)}</small></div>
+        <input class="f pct" style="margin:0" type="number" min="0" max="100" step="0.5" data-sv="${s.id}" value="${BB_COM.atuais[s.id] ?? ''}" placeholder="${Number(bb.comissao_servico)}%" aria-label="% em ${esc(s.nome)}"></div>`).join('')
+        : vazio('Cadastre os serviços primeiro.');
+      $('#dBbCom').showModal(); return;
+    }
+    await barbeiros();
+  });
+});
+$('#fBbCom').addEventListener('submit', async e => {
+  e.preventDefault(); $('#bbc-err').textContent = '';
+  try {
+    for (const inp of document.querySelectorAll('#bbc-lista [data-sv]')) {
+      const sv = Number(inp.dataset.sv), v = inp.value === '' ? null : Number(inp.value);
+      if ((BB_COM.atuais[sv] ?? null) === v) continue;
+      await rpc('barbeiro_comissao_definir', {p_barbeiro: BB_COM.id, p_servico: sv, p_percentual: v});
+    }
+    $('#dBbCom').close(); toast('Comissões salvas.');
+  } catch (x) { $('#bbc-err').textContent = x.message; }
+});
+
+// ---------- Comissões ----------
+let COMISSOES = [], BB_LANC = null;
+(function () { const [a, b] = intervalo('mes'); $('#cm-de').value = a; $('#cm-ate').value = b; })();
+['cm-de', 'cm-ate'].forEach(i => $('#' + i).addEventListener('change', () => seguro(comissoes)));
+async function comissoes() {
+  if (INFO.restrito) { $('#cm').innerHTML = vazio('Disponível após o pagamento da mensalidade.'); return; }
+  if (!BARB.length) { $('#cm').innerHTML = vazio('Cadastre os barbeiros acima para acompanhar as comissões.'); return; }
+  const de = $('#cm-de').value, ate = $('#cm-ate').value;
+  if (!de || !ate || de > ate) { $('#cm').innerHTML = vazio('Escolha um período válido.'); return; }
+  COMISSOES = await rpc('comissoes_resumo', {p_de: de, p_ate: ate});
+  $('#cm').innerHTML = COMISSOES.map(c => {
+    const periodo = Number(c.comissao_servicos) + Number(c.comissao_produtos), saldo = Number(c.saldo);
+    return `<div class="row2" data-id="${c.barbeiro_id}"><span class="av">${esc((c.nome || '?')[0])}</span>
+      <div class="who"><b>${esc(c.nome)}${c.ativo ? '' : ' (inativo)'}</b>
+        <small>${c.atendimentos} ${Number(c.atendimentos) === 1 ? 'atendimento' : 'atendimentos'} · serviços ${brl(c.servicos_valor)} · produtos ${brl(c.produtos_valor)}</small>
+        <div class="num-linha">
+          <div><p class="lab">Comissão no período</p><p class="num">${brl(periodo)}</p></div>
+          <div><p class="lab">Vales no período</p><p class="num">${brl(c.vales)}</p></div>
+          <div><p class="lab">Pago no período</p><p class="num">${brl(c.pagos)}</p></div>
+        </div></div>
+      <span class="chip ${saldo > 0 ? 'warn' : saldo < 0 ? 'red' : 'ok'} saldo">${saldo < 0 ? 'Adiantado ' + brl(-saldo) : 'A receber ' + brl(saldo)}</span>
+      <div class="acts"><button class="btn sec sm" data-a="VALE">Vale</button><button class="btn sm" data-a="PAGAMENTO">Pagar</button>
+      ${BARB.find(b => b.id === c.barbeiro_id)?.telefone ? '<button class="btn sec sm" data-a="extrato">Enviar extrato</button>' : ''}</div></div>`;
+  }).join('');
+}
+$('#cm').addEventListener('click', e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const id = Number(b.closest('[data-id]').dataset.id), c = COMISSOES.find(x => x.barbeiro_id === id), bb = BARB.find(x => x.id === id);
+  if (b.dataset.a === 'extrato') {
+    const de = $('#cm-de').value, ate = $('#cm-ate').value;
+    const msg = `Olá, ${bb.nome.split(' ')[0]}! Extrato de comissões da ${INFO.nome} de ${dataBR(de)} a ${dataBR(ate)}:\n`
+      + `• Atendimentos: ${c.atendimentos} (comissão ${brl(c.comissao_servicos)})\n• Produtos: comissão ${brl(c.comissao_produtos)}\n`
+      + `• Vales: ${brl(c.vales)}\n• Pago: ${brl(c.pagos)}\nSaldo a receber: ${brl(Math.max(0, c.saldo))}`;
+    window.open(`https://wa.me/${whats(bb.telefone)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+    return;
+  }
+  BB_LANC = {id, tipo: b.dataset.a};
+  $('#bbl-tit').textContent = (b.dataset.a === 'VALE' ? 'Vale para ' : 'Pagar comissão de ') + bb.nome;
+  $('#bbl-info').textContent = 'Saldo a receber hoje: ' + brl(c.saldo);
+  $('#bbl-v').value = b.dataset.a === 'PAGAMENTO' && Number(c.saldo) > 0 ? Number(c.saldo).toFixed(2) : '';
+  $('#bbl-d').value = ''; $('#bbl-err').textContent = ''; $('#dBbLanc').showModal();
+});
+$('#fBbLanc').addEventListener('submit', async e => {
+  e.preventDefault(); $('#bbl-err').textContent = '';
+  try {
+    await rpc('barbeiro_lancar', {p_barbeiro: BB_LANC.id, p_tipo: BB_LANC.tipo, p_valor: Number($('#bbl-v').value), p_descricao: $('#bbl-d').value});
+    $('#dBbLanc').close(); toast(BB_LANC.tipo === 'VALE' ? 'Vale registrado.' : 'Pagamento registrado.');
+    await comissoes(); seguro(painel);
+  } catch (x) { $('#bbl-err').textContent = x.message; }
+});
+
+// ---------- Estoque ----------
+$('#pr-tp').innerHTML = opcoes(TIPOS_PROD); $('#pd-tp').innerHTML = opcoes(TIPOS_PROD);
+async function estoque() {
+  await carregarBase();
+  $('#pr').innerHTML = PROD.length ? PROD.map(p => {
+    const baixo = p.ativo && Number(p.estoque) <= Number(p.estoque_minimo);
+    return `<div class="row2" data-id="${p.id}"><div class="who"><b>${esc(p.nome)}${p.ativo ? '' : ' (inativo)'}</b>
+      <small>${esc(TIPOS_PROD[p.tipo])} · custo ${brl(p.custo)}${p.tipo !== 'USO' ? ' · venda ' + brl(p.preco_venda) : ''}</small></div>
+      <span class="chip ${baixo ? 'red' : 'ok'}">${qtd(p.estoque)} ${esc(p.unidade)}</span>
+      <div class="acts"><button class="btn sm" data-a="ENTRADA">Entrada</button><button class="btn sec sm" data-a="mov">Saída/ajuste</button>
+      <button class="btn sec sm" data-a="hist">Histórico</button><button class="btn sec sm" data-a="editar">Editar</button></div></div>`;
+  }).join('') : vazio('Nenhum produto cadastrado ainda.');
+  if (INFO.restrito) { $('#vd-lista').innerHTML = vazio('Disponível após o pagamento da mensalidade.'); return; }
+  const vs = await sb.from('venda_item').select('id,produto_nome,quantidade,valor_total,forma_pagamento,data_hora,atendimento_id,cliente(nome),barbeiro(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
+  $('#vd-lista').innerHTML = vs.length ? vs.map(v => `<div class="row2"><div class="who"><b>${esc(v.produto_nome)} × ${qtd(v.quantidade)}</b>
+    <small>${dataHoraBR(v.data_hora)}${v.cliente?.nome ? ' · ' + esc(v.cliente.nome) : ''}${v.barbeiro?.nome ? ' · ' + esc(v.barbeiro.nome) : ''}${v.atendimento_id ? ' · junto com atendimento' : ''}</small></div>
+    <span class="chip">${esc(FORMAS[v.forma_pagamento] || '')}</span><b>${brl(v.valor_total)}</b>
+    ${v.atendimento_id ? '' : `<button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="VENDA" data-id="${v.id}">Excluir</button>`}</div>`).join('')
+    : vazio('Nenhuma venda de produto ainda.');
+}
+$('#fPr').addEventListener('submit', e => {
+  e.preventDefault();
+  seguro(async () => {
+    await sb.from('produto').insert({nome: $('#pr-n').value.trim(), tipo: $('#pr-tp').value, custo: Number($('#pr-c').value) || 0,
+      preco_venda: Number($('#pr-p').value) || 0, estoque_minimo: Number($('#pr-m').value) || 0}).then(ok);
+    $('#pr-n').value = ''; $('#pr-c').value = 0; $('#pr-p').value = 0;
+    toast('Produto cadastrado. Agora lance a quantidade em "Entrada".'); await estoque();
+  });
+});
+let MOV = null, EDIT_PROD = null;
+function ajustarMov() {
+  const t = $('#mv-t').value;
+  $('#mv-entrada').hidden = t !== 'ENTRADA';
+  $('#mv-q-lab').textContent = t === 'AJUSTE' ? 'Quantidade contada agora (o estoque passa a ser este número)' : t === 'CONSUMO' ? 'Quantidade usada' : 'Quantidade que entrou';
+  $('#mv-q').min = t === 'AJUSTE' ? 0 : 1;
+}
+$('#mv-t').addEventListener('change', ajustarMov);
+$('#pr').addEventListener('click', e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const p = PROD.find(x => x.id === Number(b.closest('[data-id]').dataset.id)); if (!p) return;
+  if (b.dataset.a === 'editar') {
+    EDIT_PROD = p.id; $('#pd-n').value = p.nome; $('#pd-tp').value = p.tipo; $('#pd-c').value = Number(p.custo);
+    $('#pd-p').value = Number(p.preco_venda); $('#pd-m').value = Number(p.estoque_minimo); $('#pd-a').checked = p.ativo;
+    $('#pd-err').textContent = ''; $('#dProd').showModal(); return;
+  }
+  if (b.dataset.a === 'hist') return seguro(async () => {
+    const l = await sb.from('estoque_mov').select('tipo,quantidade,saldo,custo_unit,observacao,criado_em').eq('produto_id', p.id).order('criado_em', {ascending: false}).limit(30).then(ok);
+    const nomes = {ENTRADA: 'Entrada', VENDA: 'Venda', CONSUMO: 'Uso interno', AJUSTE: 'Ajuste', ESTORNO: 'Venda desfeita'};
+    $('#hs-tit').textContent = 'Histórico · ' + p.nome;
+    $('#hs-lista').innerHTML = l.length ? l.map(m => `<div class="row2"><div class="who"><b>${nomes[m.tipo]}</b><small>${dataHoraBR(m.criado_em)}${m.observacao ? ' · ' + esc(m.observacao) : ''}</small></div>
+      <span class="chip ${Number(m.quantidade) > 0 ? 'ok' : 'red'}">${Number(m.quantidade) > 0 ? '+' : ''}${qtd(m.quantidade)}</span><span class="lab">saldo ${qtd(m.saldo)}</span></div>`).join('') : vazio('Sem movimentações.');
+    $('#dHist').showModal();
+  });
+  MOV = p.id; $('#mv-tit').textContent = p.nome; $('#mv-info').textContent = `Em estoque: ${qtd(p.estoque)} ${p.unidade}`;
+  $('#mv-t').value = b.dataset.a === 'ENTRADA' ? 'ENTRADA' : 'CONSUMO';
+  $('#mv-q').value = ''; $('#mv-c').value = Number(p.custo) || ''; $('#mv-g').checked = true; $('#mv-o').value = ''; $('#mv-err').textContent = '';
+  ajustarMov(); $('#dMov').showModal();
+});
+$('#fMov').addEventListener('submit', async e => {
+  e.preventDefault(); $('#mv-err').textContent = '';
+  const t = $('#mv-t').value;
+  try {
+    await rpc('estoque_movimentar', {p_produto: MOV, p_tipo: t, p_quantidade: Number($('#mv-q').value),
+      p_custo_unit: t === 'ENTRADA' && $('#mv-c').value !== '' ? Number($('#mv-c').value) : null,
+      p_observacao: $('#mv-o').value, p_lancar_gasto: t === 'ENTRADA' && $('#mv-g').checked});
+    $('#dMov').close(); toast('Estoque atualizado.'); await estoque(); seguro(painel);
+  } catch (x) { $('#mv-err').textContent = x.message; }
+});
+$('#fProd').addEventListener('submit', async e => {
+  e.preventDefault(); $('#pd-err').textContent = '';
+  try {
+    await sb.from('produto').update({nome: $('#pd-n').value.trim(), tipo: $('#pd-tp').value, custo: Number($('#pd-c').value) || 0,
+      preco_venda: Number($('#pd-p').value) || 0, estoque_minimo: Number($('#pd-m').value) || 0, ativo: $('#pd-a').checked}).eq('id', EDIT_PROD).then(ok);
+    $('#dProd').close(); toast('Produto salvo.'); await estoque();
+  } catch (x) { $('#pd-err').textContent = x.message; }
+});
+
+// ---------- Venda de produto sem atendimento ----------
+function totalVd() { $('#vd-tot').textContent = brl(totalItens('vd')); }
+$('#nova-venda').addEventListener('click', () => seguro(async () => {
+  await carregarBase();
+  if (!vendaveis().length) { toast('Cadastre um produto "Para venda" e lance a entrada no estoque primeiro.', true); return; }
+  preencherBarbeiros('#vd-b'); $('#vd-f').innerHTML = opcoes(FORMAS);
+  $('#vd-n').value = ''; $('#vd-t').value = ''; $('#vd-err').textContent = '';
+  iniciarItens('vd', totalVd); totalVd(); $('#dVenda').showModal();
+}));
+$('#fVenda').addEventListener('submit', async e => {
+  e.preventDefault(); $('#vd-err').textContent = '';
+  if (!ITENS.vd.length) { $('#vd-err').textContent = 'Adicione pelo menos um produto.'; return; }
+  try {
+    await rpc('vender_produtos', {p_produtos: itensParaEnviar('vd'), p_forma: $('#vd-f').value, p_barbeiro: Number($('#vd-b').value) || null,
+      p_nome: $('#vd-n').value.trim() || null, p_telefone: $('#vd-t').value.trim() || null});
+    $('#dVenda').close(); toast('Venda registrada.'); await estoque(); seguro(painel);
+  } catch (x) { $('#vd-err').textContent = x.message; }
+});
+
+// ---------- Caixa do dia ----------
+let CAIXA = null;
+async function caixa() {
+  if (INFO.restrito) { $('#cx').innerHTML = vazio('Disponível após o pagamento da mensalidade.'); $('#cx-hist').innerHTML = ''; return; }
+  const [c, hist] = await Promise.all([rpc('caixa_atual'),
+    sb.from('caixa').select('id,aberto_em,fechado_em,valor_abertura,total_pix,total_dinheiro,total_debito,total_credito,valor_contado,diferenca,observacao').not('fechado_em', 'is', null).order('aberto_em', {ascending: false}).limit(10).then(ok)]);
+  CAIXA = c;
+  if (!c.aberto) {
+    $('#cx').innerHTML = `<p class="sub" style="margin-bottom:12px">O caixa está fechado. Abra no começo do dia informando quanto há em dinheiro na gaveta (troco).</p>
+      <form id="fCxAbrir" class="cols cols-campos"><div><label class="lab" for="cx-ab">Dinheiro na abertura (R$)</label><input id="cx-ab" class="f" type="number" min="0" step="0.01" value="0" required></div>
+      <div class="cols-botao"><button class="btn">Abrir caixa</button></div></form>`;
+  } else {
+    const tot = Number(c.pix) + Number(c.dinheiro) + Number(c.debito) + Number(c.credito);
+    $('#cx').innerHTML = `<p class="lab">Aberto em ${dataHoraBR(c.aberto_em)} · entrou desde a abertura</p>
+      <p class="num cx-total">${brl(tot)}</p>
+      ${kp('Pix', brl(c.pix))}${kp('Dinheiro', brl(c.dinheiro))}${kp('Débito', brl(c.debito))}${kp('Crédito', brl(c.credito))}
+      ${kp('Dinheiro na abertura', brl(c.valor_abertura))}${kp('Suprimentos (+)', brl(c.suprimentos))}${kp('Sangrias (−)', brl(c.sangrias))}
+      <div class="kp"><span class="lab"><b>Deve haver em dinheiro na gaveta</b></span><span class="num">${brl(c.esperado_dinheiro)}</span></div>
+      ${c.movimentos.length ? '<div style="margin-top:6px">' + c.movimentos.map(m => `<div class="row2"><div class="who"><b>${m.tipo === 'SANGRIA' ? 'Sangria' : 'Suprimento'}</b><small>${dataHoraBR(m.criado_em)}${m.descricao ? ' · ' + esc(m.descricao) : ''}</small></div><b>${m.tipo === 'SANGRIA' ? '−' : '+'} ${brl(m.valor)}</b></div>`).join('') + '</div>' : ''}
+      <div class="cx-acoes"><button class="btn sec sm" type="button" data-cx="SANGRIA">Sangria (retirada)</button><button class="btn sec sm" type="button" data-cx="SUPRIMENTO">Suprimento (reforço de troco)</button></div>
+      <form id="fCxFechar" class="cols cols-campos">
+        <div><label class="lab" for="cx-ct">Dinheiro contado na gaveta (R$)</label><input id="cx-ct" class="f" type="number" min="0" step="0.01" required></div>
+        <div><label class="lab" for="cx-ob">Observação (opcional)</label><input id="cx-ob" class="f" maxlength="300"></div>
+        <div class="cols-botao"><button class="btn">Fechar caixa</button></div></form>`;
+  }
+  $('#cx-hist').innerHTML = hist.length ? hist.map(h => {
+    const tot = Number(h.total_pix) + Number(h.total_dinheiro) + Number(h.total_debito) + Number(h.total_credito), d = Number(h.diferenca);
+    return `<div class="row2"><div class="who"><b>${dataHoraBR(h.aberto_em)} até ${dataHoraBR(h.fechado_em)}</b>
+      <small>Pix ${brl(h.total_pix)} · Dinheiro ${brl(h.total_dinheiro)} · Débito ${brl(h.total_debito)} · Crédito ${brl(h.total_credito)}${h.observacao ? ' · ' + esc(h.observacao) : ''}</small></div>
+      <b>${brl(tot)}</b><span class="chip ${d === 0 ? 'ok' : d > 0 ? 'blue' : 'red'}">${d === 0 ? 'Bateu' : d > 0 ? 'Sobrou ' + brl(d) : 'Faltou ' + brl(-d)}</span></div>`;
+  }).join('') : vazio('Nenhum caixa fechado ainda.');
+}
+$('#cx').addEventListener('submit', e => {
+  e.preventDefault();
+  if (e.target.id === 'fCxAbrir') return seguro(async () => { await rpc('caixa_abrir', {p_valor: Number($('#cx-ab').value) || 0}); toast('Caixa aberto.'); await caixa(); });
+  if (e.target.id === 'fCxFechar') return seguro(async () => {
+    const contado = Number($('#cx-ct').value), dif = contado - Number(CAIXA.esperado_dinheiro);
+    const aviso = dif === 0 ? 'O dinheiro bateu.' : dif > 0 ? `Sobrou ${brl(dif)} em dinheiro.` : `Faltou ${brl(-dif)} em dinheiro.`;
+    if (!confirm(`${aviso}\n\nFechar o caixa agora?`)) return;
+    await rpc('caixa_fechar', {p_contado: contado, p_observacao: $('#cx-ob').value});
+    toast('Caixa fechado. ' + aviso); await caixa();
+  });
+});
+let CX_MOV = null;
+$('#cx').addEventListener('click', e => {
+  const b = e.target.closest('[data-cx]'); if (!b) return;
+  CX_MOV = b.dataset.cx;
+  $('#cxm-tit').textContent = CX_MOV === 'SANGRIA' ? 'Sangria' : 'Suprimento';
+  $('#cxm-info').textContent = CX_MOV === 'SANGRIA' ? 'Dinheiro retirado da gaveta (ex.: depósito, pagamento em dinheiro).' : 'Dinheiro colocado na gaveta (ex.: reforço de troco).';
+  $('#cxm-v').value = ''; $('#cxm-d').value = ''; $('#cxm-err').textContent = ''; $('#dCxMov').showModal();
+});
+$('#fCxMov').addEventListener('submit', async e => {
+  e.preventDefault(); $('#cxm-err').textContent = '';
+  try {
+    await rpc('caixa_movimentar', {p_tipo: CX_MOV, p_valor: Number($('#cxm-v').value), p_descricao: $('#cxm-d').value});
+    $('#dCxMov').close(); toast('Registrado.'); await caixa();
+  } catch (x) { $('#cxm-err').textContent = x.message; }
 });
 
 // ======================= ADMINISTRAÇÃO (só acesso e cobrança) =======================
@@ -634,7 +1009,7 @@ async function pubCarregarHorarios() {
   $('#pub-resumo').hidden = true;
   if (!servico || !dia || !PUBLICO) { $('#pub-hora').innerHTML = '<option value="">Selecione um serviço e uma data</option>'; return; }
   try {
-    const rows = await rpc('public_horarios_disponiveis', {p_barbearia_id: Number(PUBLICO.id), p_servico: servico, p_dia: dia});
+    const rows = await rpc('public_horarios_disponiveis_v2', {p_barbearia_id: Number(PUBLICO.id), p_servico: servico, p_dia: dia, p_barbeiro: Number($('#pub-barbeiro').value) || null});
     $('#pub-hora').innerHTML = rows.length ? '<option value="">Escolha um horário</option>' + rows.map(r => { const v = String(r.inicio).replace(' ', 'T').slice(0,16); return `<option value="${esc(v)}">${esc(v.slice(11,16))}</option>`; }).join('') : '<option value="">Sem horários disponíveis nesta data</option>';
   } catch (e) { $('#pub-hora').innerHTML = '<option value="">Não foi possível carregar os horários</option>'; pubErro(e.message); }
 }
@@ -649,6 +1024,9 @@ async function iniciarAgendamentoPublico(id) {
     $('#pub-horario').textContent = `Atendimento das ${String(PUBLICO.abre).slice(0,5)} às ${String(PUBLICO.fecha).slice(0,5)}`;
     $('#pub-logo').hidden = !PUBLICO.logo; if (PUBLICO.logo) $('#pub-logo').src = PUBLICO.logo;
     PUBLIC_SERV = PUBLICO.servicos || [];
+    const barbs = PUBLICO.barbeiros || [];
+    $('#pub-barbeiro-box').hidden = !barbs.length;
+    $('#pub-barbeiro').innerHTML = '<option value="">Qualquer barbeiro disponível</option>' + barbs.map(x => `<option value="${esc(x.id)}">${esc(x.nome)}</option>`).join('');
     $('#pub-servico').innerHTML = '<option value="">Selecione um serviço</option>' + PUBLIC_SERV.map(x => `<option value="${esc(x.id)}">${esc(x.nome)} — ${brl(x.preco)} (${esc(x.duracao_min)} min)</option>`).join('');
     if (!PUBLIC_SERV.length) throw new Error('Esta barbearia ainda não cadastrou serviços ativos.');
     await pubCarregarHorarios();
@@ -659,10 +1037,12 @@ async function iniciarAgendamentoPublico(id) {
 }
 $('#pub-servico').addEventListener('change', pubCarregarHorarios);
 $('#pub-data').addEventListener('change', pubCarregarHorarios);
+$('#pub-barbeiro').addEventListener('change', pubCarregarHorarios);
 $('#pub-hora').addEventListener('change', () => {
   const s = PUBLIC_SERV.find(x => String(x.id) === $('#pub-servico').value), h = $('#pub-hora').value;
+  const bb = (PUBLICO?.barbeiros || []).find(x => String(x.id) === $('#pub-barbeiro').value);
   const el = $('#pub-resumo');
-  if (s && h) { el.hidden = false; el.textContent = `${s.nome} • ${brl(s.preco)} • ${$('#pub-data').value.split('-').reverse().join('/')} às ${h.slice(11,16)}`; } else el.hidden = true;
+  if (s && h) { el.hidden = false; el.textContent = `${s.nome} • ${brl(s.preco)} • ${$('#pub-data').value.split('-').reverse().join('/')} às ${h.slice(11,16)}${bb ? ' • com ' + bb.nome : ''}`; } else el.hidden = true;
 });
 $('#form-publico-agendamento').addEventListener('submit', async e => {
   e.preventDefault(); pubErro('');
@@ -670,9 +1050,11 @@ $('#form-publico-agendamento').addEventListener('submit', async e => {
   try {
     const inicio = $('#pub-hora').value;
     if (!inicio) throw new Error('Escolha um horário disponível.');
-    await rpc('public_agenda_marcar', {p_barbearia_id: Number(PUBLICO.id), p_nome: $('#pub-cliente').value.trim(), p_telefone: $('#pub-telefone').value, p_servico: Number($('#pub-servico').value), p_inicio: inicio + ':00'});
+    await rpc('public_agenda_marcar_v2', {p_barbearia_id: Number(PUBLICO.id), p_nome: $('#pub-cliente').value.trim(), p_telefone: $('#pub-telefone').value, p_servico: Number($('#pub-servico').value), p_inicio: inicio + ':00', p_barbeiro: Number($('#pub-barbeiro').value) || null});
+    const resumo = $('#pub-resumo').textContent;
     $('#form-publico-agendamento').hidden = true;
-    $('#pub-erro').className = 'success-message'; $('#pub-erro').textContent = 'Agendamento confirmado! Se precisar alterar o horário, entre em contato diretamente com a barbearia.';
+    $('#pub-sucesso-txt').textContent = (resumo ? resumo + '. ' : '') + 'Se precisar alterar o horário, entre em contato diretamente com a barbearia.';
+    $('#pub-sucesso').hidden = false;
   } catch (e2) { pubErro(e2.message); await pubCarregarHorarios(); }
   finally { botao.disabled = false; botao.textContent = 'Confirmar agendamento'; }
 });
