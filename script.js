@@ -149,6 +149,7 @@ const RECURSOS_INFO = {
   fidelidade: ['Programa de fidelidade', 'A cada tantos atendimentos, o próximo é por conta da casa.'],
   marketing: ['Lembretes e aniversariantes', 'Lembretes dos horários de amanhã, parabéns no aniversário e clientes para chamar de volta.'],
   relatorios: ['Relatórios', 'Faturamento, horários de pico, desempenho por barbeiro, faltas e produtos mais vendidos.'],
+  retorno: ['Clientes para chamar', 'Avisa quando um cliente passa do ritmo de visitas, para você chamar com uma promoção.'],
 };
 const RECURSO_DA_PAGINA = {agenda: 'agenda', caixa: 'caixa', clube: 'clube', barbeiros: 'barbeiros', estoque: 'estoque', relatorios: 'relatorios'};
 let PLANO = {plano: 'PRO', recursos: Object.keys(RECURSOS_INFO), recursos_pro: Object.keys(RECURSOS_INFO), preco_pro: null, whatsapp_vendas: null};
@@ -156,13 +157,19 @@ const tem = r => PLANO.recursos.includes(r);
 async function carregarPlano() {
   // Se a atualização 4 ainda não foi instalada, tudo continua liberado como antes
   try { PLANO = await rpc('meus_recursos'); } catch (e) { /* mantém o padrão */ }
+  // Sem a atualização 6, "Clientes para chamar" continua liberado como sempre foi
+  if (!PLANO.recursos.includes('retorno')) {
+    const instalada = await sb.from('barbearia').select('retorno_dias_extra').maybeSingle().then(r => !r.error);
+    if (!instalada) PLANO.recursos = PLANO.recursos.concat('retorno');
+  }
   document.querySelectorAll('#tabs .tag-pro').forEach(t => t.remove());
   Object.entries(RECURSO_DA_PAGINA).forEach(([pag, rec]) => {
     if (!tem(rec)) $(`#tabs [data-t="${pag}"]`)?.insertAdjacentHTML('beforeend', '<span class="tag-pro">Pro</span>');
   });
   [['#atalho-horario', 'agenda'], ['[data-atalho="vender"]', 'estoque'], ['[data-atalho="caixa"]', 'caixa'], ['[data-atalho="clube"]', 'clube']]
     .forEach(([sel, rec]) => { if (!tem(rec)) $(sel).hidden = true; });
-  ['#card-lembretes', '#card-aniver', '#card-chamar', '#card-resultado'].forEach(sel => { if (!tem('marketing')) $(sel).hidden = true; });
+  ['#card-lembretes', '#card-aniver'].forEach(sel => { if (!tem('marketing')) $(sel).hidden = true; });
+  ['#card-chamar', '#card-resultado'].forEach(sel => { $(sel).hidden = !tem('retorno'); });
   $('#cf-fid').closest('label').hidden = !tem('fidelidade'); if (!tem('fidelidade')) $('#cf-fid-box').hidden = true;
   $('#cf-a').closest('label').hidden = !tem('agenda');
 }
@@ -299,7 +306,9 @@ async function ranking() {
   $('#rank').innerHTML = l.length ? l.map(c => `<div class="row"><span class="av">${esc(c.nome[0] || '?')}</span><span class="nm" style="flex:1">${esc(c.nome)}</span><div class="tr" style="max-width:120px"><i style="width:${Math.round(c.visitas / mx * 100)}%"></i></div><span class="v" style="min-width:70px">${c.visitas} ${c.visitas === 1 ? 'visita' : 'visitas'}</span></div>`).join('') : vazio('Ainda não há atendimentos neste período.');
 }
 
-// Ritmo de cada cliente: com 3 visitas ou mais, calcula o intervalo médio; passou de 1,5x esse intervalo = cliente para chamar.
+// Ritmo de cada cliente: com 3 visitas ou mais, calcula o intervalo médio entre as visitas.
+// Passou do ritmo + os dias de tolerância da barbearia (padrão 20) = cliente para chamar.
+let RETORNO_EXTRA = 20;
 async function dadosFreq() {
   const [vis, cli, con] = await Promise.all([rpc('visitas'), sb.from('cliente').select('id,nome,telefone').limit(5000).then(ok),
     sb.from('contato').select('cliente_id,enviado_em,promocao').limit(5000).then(ok)]);
@@ -309,32 +318,42 @@ async function dadosFreq() {
   return {porC, cli, con};
 }
 async function atrasados() {
+  try { const r = await sb.from('barbearia').select('retorno_dias_extra').maybeSingle().then(ok); if (r) RETORNO_EXTRA = Number(r.retorno_dias_extra); } catch (e) { /* atualização 6 ainda não instalada: usa 20 */ }
+  $('#ret-dias').value = RETORNO_EXTRA;
   const hoje = hojeISO(), {porC, cli, con} = await dadosFreq(), ult = {};
   con.forEach(c => { const d = c.enviado_em.slice(0, 10); if (!ult[c.cliente_id] || d > ult[c.cliente_id]) ult[c.cliente_id] = d; });
   const L = [];
   cli.forEach(c => {
     const d = porC[c.id]; if (!d || d.length < 3) return;
     const media = diasEntre(d[0], d[d.length - 1]) / (d.length - 1), sem = diasEntre(d[d.length - 1], hoje);
-    if (sem <= 1.5 * media) return;
+    const atraso = sem - Math.round(media);
+    if (atraso < RETORNO_EXTRA || atraso <= 0) return;
     if (ult[c.id] && diasEntre(ult[c.id], hoje) <= 14) return; // já foi chamado há pouco tempo
-    L.push({clienteId: c.id, nome: c.nome, whatsapp: whats(c.telefone), intervaloMedioDias: Math.round(media), diasSemVir: sem, r: sem / media});
+    L.push({clienteId: c.id, nome: c.nome, whatsapp: whats(c.telefone), intervaloMedioDias: Math.round(media), diasSemVir: sem, atraso, visitas: d.length});
   });
-  ATR = L.sort((a, b) => b.r - a.r); chamarRender();
+  ATR = L.sort((a, b) => b.atraso - a.atraso); chamarRender();
 }
 function chamarRender() {
   const tpl = $('#tpl').value, promo = $('#promo').value.trim() || 'uma condição especial';
   $('#chm').innerHTML = ATR.length ? ATR.map(c => {
     const msg = tpl.split('{nome}').join(c.nome.split(' ')[0]).split('{barbearia}').join(INFO.nome).split('{promocao}').join(promo);
-    return `<div class="row2"><span class="av">${esc(c.nome[0] || '?')}</span><div class="who"><b>${esc(c.nome)}</b><small>Costuma vir a cada ${c.intervaloMedioDias} dias e está há ${c.diasSemVir} sem vir</small></div><a class="wa" data-id="${c.clienteId}" target="_blank" rel="noopener" href="https://wa.me/${esc(c.whatsapp)}?text=${encodeURIComponent(msg)}">Chamar no WhatsApp</a></div>`;
-  }).join('') : vazio('Nenhum cliente fora do ritmo agora.');
+    return `<div class="row2"><span class="av">${esc(c.nome[0] || '?')}</span><div class="who"><b>${esc(c.nome)}</b><small>Costuma vir a cada ${c.intervaloMedioDias} ${c.intervaloMedioDias === 1 ? 'dia' : 'dias'} (${c.visitas} visitas) · última visita há ${c.diasSemVir} dias</small></div><span class="chip red">${c.atraso} dias de atraso</span><a class="wa" data-id="${c.clienteId}" target="_blank" rel="noopener" href="https://wa.me/${esc(c.whatsapp)}?text=${encodeURIComponent(msg)}">Chamar no WhatsApp</a></div>`;
+  }).join('') : vazio(`Nenhum cliente passou ${RETORNO_EXTRA} dias do próprio ritmo. Os clientes com 3 visitas ou mais são acompanhados automaticamente.`);
+  $('#chm-qtd').hidden = !ATR.length; $('#chm-qtd').textContent = ATR.length;
 }
+$('#ret-dias').addEventListener('change', () => seguro(async () => {
+  const v = Math.round(Number($('#ret-dias').value));
+  if (!(v >= 0 && v <= 180)) { toast('Use um número de 0 a 180 dias.', true); $('#ret-dias').value = RETORNO_EXTRA; return; }
+  await sb.from('barbearia').update({retorno_dias_extra: v}).eq('id', INFO.id).then(ok);
+  RETORNO_EXTRA = v; toast(`Pronto: avisa quando o cliente passar ${v} dias do ritmo.`); await atrasados();
+}));
 // Comparação justa: no passado, quantas vezes um cliente ficou atrasado SEM ser chamado e voltou em até 14 dias.
 function baseSemChamar(porC, con, hoje) {
   let ep = 0, vol = 0; const env = {};
   con.forEach(c => (env[c.cliente_id] = env[c.cliente_id] || []).push(c.enviado_em.slice(0, 10)));
   Object.entries(porC).forEach(([id, d]) => {
     for (let i = 2; i < d.length; i++) {
-      const media = diasEntre(d[0], d[i]) / i, marco = maisDia(d[i], Math.floor(1.5 * media) + 1), fim = maisDia(marco, 14);
+      const media = diasEntre(d[0], d[i]) / i, marco = maisDia(d[i], Math.round(media) + Math.max(1, RETORNO_EXTRA)), fim = maisDia(marco, 14);
       if (fim > hoje) continue;
       const prox = d[i + 1];
       if (prox && prox < marco) continue;
@@ -377,7 +396,7 @@ async function resultado() {
   const ult = itens.sort((a, b) => b.c.enviado_em.localeCompare(a.c.enviado_em)).slice(0, 5);
   $('#ms').innerHTML = ult.length ? ult.map(u => `<div class="row2"><span class="av">${esc((nomes[u.c.cliente_id] || '?')[0])}</span><div class="who"><b>${esc(nomes[u.c.cliente_id])}</b><small>${esc(u.c.promocao)}</small></div><span class="chip">${sit[u.s]}${u.d != null ? ' em ' + u.d + ' dias' : ''}</span></div>`).join('') : vazio('Nenhuma mensagem enviada.');
 }
-function tudoDoPainel() { marca(); [painel, recentes, ranking, carregarBase].concat(tem('marketing') ? [atrasados, resultado, lembretes, aniversariantes] : []).forEach(f => seguro(f)); }
+function tudoDoPainel() { marca(); [painel, recentes, ranking, carregarBase].concat(tem('retorno') ? [atrasados, resultado] : [], tem('marketing') ? [lembretes, aniversariantes] : []).forEach(f => seguro(f)); }
 
 // ---------- Agenda ----------
 async function agenda() {
@@ -1450,7 +1469,8 @@ $('#a-sair').addEventListener('click', sair);
 // ---------- Planos e recursos ----------
 function desenharPlanos() {
   const nomes = {agenda: 'Agenda e agendamento online', barbeiros: 'Barbeiros e comissões', estoque: 'Estoque e venda de produtos', caixa: 'Caixa do dia',
-    clube: 'Clube de assinatura', fidelidade: 'Programa de fidelidade', marketing: 'Lembretes, aniversariantes e clientes para chamar', relatorios: 'Relatórios'};
+    clube: 'Clube de assinatura', fidelidade: 'Programa de fidelidade', marketing: 'Lembretes e aniversariantes', relatorios: 'Relatórios',
+    retorno: 'Clientes para chamar (análise de frequência)'};
   const chave = (rec, pl, on) => `<label class="chave"><input type="checkbox" data-rec="${rec}" data-pl="${pl}"${on ? ' checked' : ''} aria-label="${esc(nomes[rec] || rec)} no plano ${pl === 'free' ? 'Free' : 'Pro'}"><span></span></label>`;
   $('#matriz').innerHTML = `<table class="matriz"><thead><tr><th>Recurso</th><th>Free</th><th>Pro</th></tr></thead><tbody>${PLANOS_CFG.recursos.map(r =>
     `<tr><td><b>${esc(nomes[r.recurso] || r.recurso)}</b></td><td>${chave(r.recurso, 'free', r.free)}</td><td>${chave(r.recurso, 'pro', r.pro)}</td></tr>`).join('')}

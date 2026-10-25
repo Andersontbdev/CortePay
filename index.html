@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="CortePay">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 <meta name="color-scheme" content="only light">
 </head>
 <body>
@@ -131,7 +131,7 @@
     <button class="side-link destaque" id="instalar" type="button" hidden><svg class="i" aria-hidden="true"><use href="#i-down"/></svg><span>Instalar o app</span></button>
     <button class="side-link" id="tema-toggle" type="button" aria-pressed="false" aria-label="Ativar modo escuro"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg><span>Modo escuro</span></button>
     <button class="side-link" id="cfg" type="button"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg><span>Configurar</span></button>
-    <small class="versao">CortePay · versão 8</small>
+    <small class="versao">CortePay · versão 9</small>
     <button class="side-link" id="sair" type="button"><svg class="i" aria-hidden="true"><use href="#i-out"/></svg><span>Sair</span></button>
   </div>
 </aside>
@@ -179,6 +179,20 @@
     <h2>Estoque baixo</h2>
     <div id="estoque-baixo"></div>
   </section>
+  <section class="card full" id="card-chamar">
+    <div class="titulo-linha">
+      <h2>Clientes para chamar <span class="chip red" id="chm-qtd" hidden></span></h2>
+      <div class="acts"><label class="lab" for="ret-dias">Avisar com</label><input id="ret-dias" class="f f-auto" type="number" min="0" max="180" step="1" value="20" style="width:76px"><span class="lab">dias além do ritmo</span></div>
+    </div>
+    <p class="sub" style="margin:-4px 0 12px">O sistema aprende de quanto em quanto tempo cada cliente costuma vir (a partir de 3 visitas). Quando ele passa do ritmo pelo número de dias escolhido, aparece aqui para você chamar com uma promoção.</p>
+    <details class="opcional"><summary>Promoção e mensagem</summary>
+      <label class="lab" for="promo">Promoção (você define na hora)</label>
+      <input id="promo" class="f" type="text" placeholder="Ex.: 10% de desconto no corte">
+      <label class="lab" for="tpl">Mensagem ({nome}: cliente, {barbearia}: sua barbearia, {promocao}: a promoção acima)</label>
+      <textarea id="tpl" class="f" rows="2">Oi, {nome}! Sentimos sua falta aqui na {barbearia}. Esta semana tem {promocao} para você. Vamos marcar?</textarea>
+    </details>
+    <div id="chm"></div>
+  </section>
   <section id="card-lembretes" class="card half" hidden>
     <h2>Lembrar os horários de amanhã</h2>
     <p class="sub" style="margin:-8px 0 10px">Um toque abre o WhatsApp com a mensagem pronta. Lembrar no dia anterior diminui as faltas.</p>
@@ -200,15 +214,7 @@
   <section class="card hero gate sensivel" aria-label="Ranking de gastos"><h2>Para onde foi o dinheiro</h2><div id="gst"></div></section>
   <section class="card k gate sensivel" aria-label="Indicadores"><h2>Indicadores</h2><div id="kpi"></div></section>
   <section class="card full"><h2>Clientes mais frequentes</h2><div id="rank"></div></section>
-  <section class="card full" id="card-chamar">
-    <h2>Clientes para chamar</h2>
-    <p class="sub" style="margin:-8px 0 12px">Clientes que estão demorando mais do que o normal para voltar.</p>
-    <label class="lab" for="promo">Promoção (você define na hora)</label>
-    <input id="promo" class="f" type="text" placeholder="Ex.: 10% de desconto no corte">
-    <label class="lab" for="tpl">Mensagem ({nome}: cliente, {barbearia}: sua barbearia, {promocao}: a promoção acima)</label>
-    <textarea id="tpl" class="f" rows="2">Oi, {nome}! Sentimos sua falta aqui na {barbearia}. Esta semana tem {promocao} para você. Vamos marcar?</textarea>
-    <div id="chm"></div>
-  </section>
+
   <section class="card full gate" id="card-resultado" aria-label="Resultado das mensagens">
     <h2>A função de chamar está funcionando?</h2>
     <div class="mini" id="rs"></div><p id="vd" style="margin:0 0 16px"></p>
@@ -578,7 +584,7 @@
 <div id="tela-admin" hidden>
 <div class="wrap">
 <header>
-  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias · versão 8</p></div>
+  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias · versão 9</p></div>
   <div class="acts">
     <button class="btn sm" id="nova" type="button">Nova barbearia</button>
     <button class="btn sec sm" id="a-sair" type="button">Sair</button>
@@ -704,6 +710,6 @@
 </form></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="script.js?v=8"></script>
+<script src="script.js?v=9"></script>
 </body>
 </html>
