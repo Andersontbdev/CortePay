@@ -253,3 +253,13 @@ details.opcional summary{cursor:pointer;color:var(--blue);font-size:14px;margin-
   .titulo-linha .acts{width:100%}
   .titulo-linha .acts .f-auto{flex:1;min-width:0}
 }
+
+/* ===== Atualização 2: clube, fidelidade, aniversariantes e lembretes ===== */
+.benef{border:1px solid var(--blue);border-radius:10px;padding:10px 12px;margin:4px 0 12px;background:rgba(52,120,200,.06);font-size:14px}
+.benef .op{display:flex;gap:8px;align-items:flex-start;margin:6px 0;cursor:pointer}
+.benef .op input{margin-top:3px}
+.benef .op small{display:block;color:var(--mut)}
+.benef .info{color:var(--mut);margin:0}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 12px}
+.checks label{display:flex;gap:8px;align-items:center;font-size:14px}
+.chip.warn{background:rgba(154,98,0,.16);color:var(--warn)}

@@ -73,6 +73,7 @@ function intervalo(p) {
   return [iso(new Date(h.getFullYear(), h.getMonth(), 1, 12)), iso(new Date(h.getFullYear(), h.getMonth() + 1, 0, 12))];
 }
 const FORMAS = {PIX: 'Pix', DINHEIRO: 'Dinheiro', DEBITO: 'Débito', CREDITO: 'Crédito'};
+const FORMAS_TODAS = {...FORMAS, ASSINATURA: 'Clube', FIDELIDADE: 'Fidelidade'};
 const CATS = {ALUGUEL: 'Aluguel', PRODUTOS: 'Produtos', ENERGIA: 'Energia', AGUA: 'Água', COMISSOES: 'Comissões e vales', OUTROS: 'Outros'};
 const TIPOS_PROD = {VENDA: 'Para venda', USO: 'Uso interno', AMBOS: 'Venda e uso interno'};
 const qtd = n => Number(n || 0).toLocaleString('pt-BR', {maximumFractionDigits: 3});
@@ -132,7 +133,7 @@ async function entrar() {
   if (!p) { $('#cv-cod').value = guarda('convite') || ''; return tela('tela-convite'); }
   if (p.papel === 'ADMIN') { tela('tela-admin'); return seguro(admCarregar); }
   tela('tela-app');
-  const [b, s] = await Promise.all([sb.from('barbearia').select('id,nome,logo,vencimento,usa_agendamento,abre,fecha').maybeSingle().then(ok), rpc('minha_situacao')]);
+  const [b, s] = await Promise.all([sb.from('barbearia').select('id,nome,logo,vencimento,usa_agendamento,abre,fecha,fidelidade_meta').maybeSingle().then(ok), rpc('minha_situacao')]);
   INFO = {...b, restrito: s[0].restrito, situacao: s[0].situacao};
   tudoDoPainel();
 }
@@ -169,11 +170,15 @@ async function painel() {
     sb.from('atendimento').select('valor_final,forma_pagamento,data_hora').gte('data_hora', i0 + 'T00:00:00').lt('data_hora', maisDia(i1, 1) + 'T00:00:00').limit(5000).then(ok),
     sb.from('despesa').select('categoria,valor').gte('data_despesa', i0).lte('data_despesa', i1).limit(5000).then(ok),
     sb.from('venda_item').select('valor_total,forma_pagamento,data_hora').gte('data_hora', i0 + 'T00:00:00').lt('data_hora', maisDia(i1, 1) + 'T00:00:00').limit(5000).then(ok)]);
+  const cps = await sb.from('clube_pagamento').select('valor,forma_pagamento,pago_em').gte('pago_em', i0 + 'T00:00:00').lt('pago_em', maisDia(i1, 1) + 'T00:00:00').limit(5000).then(ok);
   // Entradas = atendimentos + produtos vendidos (com ou sem atendimento)
-  const at = ats.concat(vds.map(v => ({valor_final: v.valor_total, forma_pagamento: v.forma_pagamento, data_hora: v.data_hora})));
+  const at = ats.filter(a => FORMAS[a.forma_pagamento])
+    .concat(vds.map(v => ({valor_final: v.valor_total, forma_pagamento: v.forma_pagamento, data_hora: v.data_hora})))
+    .concat(cps.map(c => ({valor_final: c.valor, forma_pagamento: c.forma_pagamento, data_hora: c.pago_em})));
   const entrou = soma(at.map(a => a.valor_final)), gastos = soma(ds.map(d => d.valor)), lucro = entrou - gastos;
   $('#luc').textContent = brl(lucro); $('#in').textContent = brl(entrou); $('#out').textContent = brl(gastos); $('#qt').textContent = ats.length;
   $('#pv').textContent = brl(soma(vds.map(v => v.valor_total)));
+  $('#cv').textContent = brl(soma(cps.map(c => c.valor)));
   const serie = new Map();
   if (PER === 'hoje') { [...new Set(at.map(a => +a.data_hora.slice(11, 13)))].sort((x, y) => x - y).forEach(h => serie.set(h + 'h', 0)); }
   else if (PER === 'semana') DIAS.forEach(d => serie.set(d, 0));
@@ -197,21 +202,23 @@ async function painel() {
 async function recentes() {
   if (INFO.restrito) return;
   const l = await sb.from('atendimento').select('id,valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome),barbeiro(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
-  $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${a.barbeiro?.nome ? ' · ' + esc(a.barbeiro.nome) : ''}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b><button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="ENTRADA" data-id="${a.id}" aria-label="Excluir entrada de ${esc(a.cliente?.nome || 'cliente')}">Excluir</button></div>`).join('') : vazio('Nenhum atendimento ainda.');
+  $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${a.barbeiro?.nome ? ' · ' + esc(a.barbeiro.nome) : ''}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS_TODAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b><button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="ENTRADA" data-id="${a.id}" aria-label="Excluir entrada de ${esc(a.cliente?.nome || 'cliente')}">Excluir</button></div>`).join('') : vazio('Nenhum atendimento ainda.');
 }
 
 // Excluir entradas (atendimentos) e saídas (gastos) com confirmação.
 // A exclusão é feita por uma função SQL que valida a barbearia vinculada ao usuário.
 async function excluirLancamento(tipo, id) {
-  const ehEntrada = tipo === 'ENTRADA', ehVenda = tipo === 'VENDA';
+  const ehEntrada = tipo === 'ENTRADA', ehVenda = tipo === 'VENDA', ehClube = tipo === 'CLUBE';
   const pergunta = ehEntrada
     ? 'Deseja realmente excluir esta entrada? Se ela veio de um agendamento, o horário relacionado também será cancelado. Produtos vendidos junto voltam para o estoque.'
     : ehVenda ? 'Deseja realmente excluir esta venda? O produto volta para o estoque.'
+    : ehClube ? 'Deseja realmente excluir este recebimento do clube? O vencimento da assinatura volta para a data anterior.'
     : 'Deseja realmente excluir esta saída/gasto?';
   if (!confirm(pergunta)) return;
   await rpc('excluir_lancamento', {p_tipo: tipo, p_id: Number(id)});
-  toast(ehEntrada ? 'Entrada excluída.' : ehVenda ? 'Venda excluída.' : 'Saída excluída.');
-  if (ehEntrada || ehVenda) {
+  toast(ehEntrada ? 'Entrada excluída.' : ehVenda ? 'Venda excluída.' : ehClube ? 'Recebimento excluído.' : 'Saída excluída.');
+  if (ehClube) { await clube(); seguro(painel); }
+  else if (ehEntrada || ehVenda) {
     tudoDoPainel();
     seguro(agenda);
     if (ehVenda) seguro(estoque);
@@ -315,7 +322,7 @@ async function resultado() {
   const ult = itens.sort((a, b) => b.c.enviado_em.localeCompare(a.c.enviado_em)).slice(0, 5);
   $('#ms').innerHTML = ult.length ? ult.map(u => `<div class="row2"><span class="av">${esc((nomes[u.c.cliente_id] || '?')[0])}</span><div class="who"><b>${esc(nomes[u.c.cliente_id])}</b><small>${esc(u.c.promocao)}</small></div><span class="chip">${sit[u.s]}${u.d != null ? ' em ' + u.d + ' dias' : ''}</span></div>`).join('') : vazio('Nenhuma mensagem enviada.');
 }
-function tudoDoPainel() { marca(); [painel, recentes, ranking, atrasados, resultado, carregarBase].forEach(f => seguro(f)); }
+function tudoDoPainel() { marca(); [painel, recentes, ranking, atrasados, resultado, carregarBase, lembretes, aniversariantes].forEach(f => seguro(f)); }
 
 // ---------- Agenda ----------
 async function agenda() {
@@ -328,7 +335,7 @@ async function agenda() {
     filtro.innerHTML = '<option value="">Todos os barbeiros</option>' + BARB_ATIVOS().map(b => `<option value="${b.id}">${esc(b.nome)}</option>`).join('');
     filtro.value = BARB_ATIVOS().some(b => String(b.id) === atual) ? atual : '';
   }
-  let q = sb.from('agendamento').select('id,inicio,fim,status,barbeiro_id,cliente(nome,telefone),servico(nome,preco),barbeiro(nome)').gte('inicio', DIA + 'T00:00:00').lt('inicio', maisDia(DIA, 1) + 'T00:00:00').order('inicio');
+  let q = sb.from('agendamento').select('id,inicio,fim,status,barbeiro_id,cliente_id,servico_id,cliente(nome,telefone),servico(nome,preco),barbeiro(nome)').gte('inicio', DIA + 'T00:00:00').lt('inicio', maisDia(DIA, 1) + 'T00:00:00').order('inicio');
   if (!filtro.hidden && filtro.value) q = q.eq('barbeiro_id', Number(filtro.value));
   const l = AGENDA = await q.then(ok);
   $('#ag').innerHTML = l.length ? l.map(a => {
@@ -379,8 +386,8 @@ async function gastos() {
 // ---------- Navegação e eventos ----------
 function aba(nome) {
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === nome)));
-  ['painel', 'agenda', 'caixa', 'servicos', 'barbeiros', 'estoque', 'gastos'].forEach(n => $('#v-' + n).hidden = n !== nome);
-  const carregar = {agenda, servicos, gastos, barbeiros, estoque, caixa}[nome];
+  ['painel', 'agenda', 'caixa', 'clube', 'servicos', 'barbeiros', 'estoque', 'gastos'].forEach(n => $('#v-' + n).hidden = n !== nome);
+  const carregar = {agenda, servicos, gastos, barbeiros, estoque, caixa, clube}[nome];
   if (carregar) seguro(carregar);
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) aba(b.dataset.t); });
@@ -430,8 +437,13 @@ function totalServico(preco, idDesc) {
 }
 function totalAt() {
   const s = SERV.find(x => String(x.id) === $('#at-s').value);
-  $('#at-tot').textContent = brl((s ? totalServico(s.preco, '#at-d') : 0) + totalItens('at'));
+  $('#at-tot').textContent = brl((s && !BENEF.at ? totalServico(s.preco, '#at-d') : 0) + totalItens('at'));
 }
+function benefAt() {
+  const cli = Number($('#at-cliente-existente').value) || null;
+  atualizarBenef('at', {p_cliente: cli, p_telefone: cli ? null : $('#at-t').value, p_servico: Number($('#at-s').value) || null});
+}
+['at-cliente-existente', 'at-s', 'at-t'].forEach(i => $('#' + i).addEventListener('change', benefAt));
 $('#novo').addEventListener('click', () => seguro(async () => {
   await Promise.all([carregarServicos(), carregarClientesAtendimento(), carregarBase()]);
   if (!SERV.length) { toast('Cadastre ao menos um serviço antes, na aba Serviços.', true); aba('servicos'); return; }
@@ -440,6 +452,7 @@ $('#novo').addEventListener('click', () => seguro(async () => {
   $('#at-cliente-existente').value = ''; $('#at-n').value = ''; $('#at-t').value = ''; $('#at-d').value = 0;
   $('#at-cliente-ajuda').textContent = 'Selecione um cliente salvo para preencher nome e telefone automaticamente.';
   preencherBarbeiros('#at-b'); iniciarItens('at', totalAt);
+  BENEF.at = null; $('#at-benef').hidden = true; $('#at-nasc').value = ''; $('#at-nasc-box').open = false;
   totalAt(); $('#dAt').showModal();
 }));
 ['at-s', 'at-d'].forEach(i => $('#' + i).addEventListener('input', totalAt));
@@ -447,8 +460,9 @@ $('#fAt').addEventListener('submit', async e => {
   e.preventDefault(); $('#at-err').textContent = '';
   const b = e.submitter || $('#fAt button:not([type])'); b.disabled = true;
   try {
-    await rpc('registrar_atendimento_v2', {p_nome: $('#at-n').value, p_telefone: $('#at-t').value, p_servico: Number($('#at-s').value),
-      p_desconto: Number($('#at-d').value) || 0, p_forma: $('#at-f').value, p_barbeiro: barbeiroEscolhido('#at-b'), p_produtos: itensParaEnviar('at')});
+    await rpc('registrar_atendimento_v3', {p_nome: $('#at-n').value, p_telefone: $('#at-t').value, p_servico: Number($('#at-s').value),
+      p_desconto: BENEF.at ? 0 : Number($('#at-d').value) || 0, p_forma: $('#at-f').value, p_barbeiro: barbeiroEscolhido('#at-b'),
+      p_produtos: itensParaEnviar('at'), p_beneficio: BENEF.at, p_nascimento: $('#at-nasc').value || null});
     $('#dAt').close(); $('#fAt').reset(); $('#at-cliente-ajuda').textContent = 'Selecione um cliente salvo para preencher nome e telefone automaticamente.'; toast('Atendimento salvo.'); tudoDoPainel();
   } catch (x) { $('#at-err').textContent = x.message; }
   finally { b.disabled = false; }
@@ -477,7 +491,7 @@ $('#fAg').addEventListener('submit', async e => {
   } catch (x) { $('#ag-err').textContent = x.message; }
 });
 let CONCLUIR_SERV = null;
-function totalCon() { $('#co-tot').textContent = brl(totalServico(CONCLUIR_SERV?.preco, '#co-d') + totalItens('co')); }
+function totalCon() { $('#co-tot').textContent = brl((BENEF.co ? 0 : totalServico(CONCLUIR_SERV?.preco, '#co-d')) + totalItens('co')); }
 $('#co-d').addEventListener('input', totalCon);
 $('#ag').addEventListener('click', e => {
   const b = e.target.closest('button[data-a]'); if (!b) return;
@@ -486,7 +500,9 @@ $('#ag').addEventListener('click', e => {
     CONCLUIR = b.dataset.id; CONCLUIR_SERV = a?.servico || null;
     $('#co-info').textContent = a ? `${a.cliente?.nome || ''} · ${a.servico?.nome || ''} · ${hora(a.inicio)}` : '';
     $('#co-f').innerHTML = opcoes(FORMAS); $('#co-d').value = 0; $('#co-err').textContent = '';
-    preencherBarbeiros('#co-b', a?.barbeiro_id); iniciarItens('co', totalCon); totalCon();
+    preencherBarbeiros('#co-b', a?.barbeiro_id); iniciarItens('co', totalCon);
+    BENEF.co = null; $('#co-benef').hidden = true; totalCon();
+    if (a) atualizarBenef('co', {p_cliente: a.cliente_id, p_servico: a.servico_id});
     $('#dCon').showModal(); return;
   }
   seguro(async () => { await sb.from('agendamento').update({status: b.dataset.a}).eq('id', Number(b.dataset.id)).then(ok); await agenda(); });
@@ -494,7 +510,7 @@ $('#ag').addEventListener('click', e => {
 $('#fCon').addEventListener('submit', async e => {
   e.preventDefault(); $('#co-err').textContent = '';
   try {
-    await rpc('agenda_concluir_v2', {p_id: Number(CONCLUIR), p_desconto: Number($('#co-d').value) || 0, p_forma: $('#co-f').value,
+    await rpc('agenda_concluir_v3', {p_id: Number(CONCLUIR), p_desconto: BENEF.co ? 0 : Number($('#co-d').value) || 0, p_forma: $('#co-f').value, p_beneficio: BENEF.co,
       p_barbeiro: barbeiroEscolhido('#co-b'), p_produtos: itensParaEnviar('co')});
     $('#dCon').close(); toast('Atendimento concluído.'); seguro(agenda); tudoDoPainel();
   } catch (x) { $('#co-err').textContent = x.message; }
@@ -544,6 +560,7 @@ function reduzir(arquivo) {
 $('#cfg').addEventListener('click', () => {
   $('#cf-n').value = INFO.nome; $('#cf-a').checked = INFO.usa_agendamento;
   $('#cf-ab').value = INFO.abre.slice(0, 5); $('#cf-fe').value = INFO.fecha.slice(0, 5);
+  $('#cf-fid').checked = INFO.fidelidade_meta != null; $('#cf-fid-n').value = INFO.fidelidade_meta || 10; $('#cf-fid-box').hidden = !$('#cf-fid').checked;
   $('#cf-l').value = ''; NOVALOGO = null; $('#cf-err').textContent = ''; $('#dCfg').showModal();
 });
 $('#cf-l').addEventListener('change', async e => {
@@ -555,10 +572,12 @@ $('#fCfg').addEventListener('submit', async e => {
   const ab = $('#cf-ab').value || INFO.abre.slice(0, 5), fe = $('#cf-fe').value || INFO.fecha.slice(0, 5);
   if (ab >= fe) { $('#cf-err').textContent = 'O horário de abertura deve ser antes do fechamento.'; return; }
   try {
-    const dados = {nome: $('#cf-n').value.trim(), usa_agendamento: $('#cf-a').checked, abre: ab, fecha: fe};
+    const meta = Number($('#cf-fid-n').value);
+    if ($('#cf-fid').checked && !(meta >= 2 && meta <= 100)) { $('#cf-err').textContent = 'Fidelidade: informe um número entre 2 e 100.'; return; }
+    const dados = {nome: $('#cf-n').value.trim(), usa_agendamento: $('#cf-a').checked, abre: ab, fecha: fe, fidelidade_meta: $('#cf-fid').checked ? meta : null};
     if (NOVALOGO) dados.logo = NOVALOGO;
     await sb.from('barbearia').update(dados).eq('id', INFO.id).then(ok);
-    const b = await sb.from('barbearia').select('id,nome,logo,vencimento,usa_agendamento,abre,fecha').maybeSingle().then(ok);
+    const b = await sb.from('barbearia').select('id,nome,logo,vencimento,usa_agendamento,abre,fecha,fidelidade_meta').maybeSingle().then(ok);
     INFO = {...INFO, ...b}; $('#dCfg').close(); marca(); toast('Configuração salva.');
   } catch (x) { $('#cf-err').textContent = x.message; }
 });
@@ -890,6 +909,193 @@ $('#fCxMov').addEventListener('submit', async e => {
   } catch (x) { $('#cxm-err').textContent = x.message; }
 });
 
+// ======================= CLUBE, FIDELIDADE, ANIVERSÁRIOS E LEMBRETES =======================
+// ---------- Benefícios do cliente no atendimento (clube e fidelidade) ----------
+const BENEF = {at: null, co: null}, BENEF_REQ = {at: 0, co: 0};
+async function atualizarBenef(k, args) {
+  const box = $('#' + k + '-benef'), recalcular = k === 'at' ? totalAt : totalCon;
+  BENEF[k] = null;
+  const tel = String(args.p_telefone || '').replace(/\D/g, '');
+  if (!args.p_servico || (!args.p_cliente && tel.length < 10)) { box.hidden = true; recalcular(); return; }
+  const req = ++BENEF_REQ[k];
+  let b;
+  try { b = await rpc('beneficios_cliente', args); } catch (e) { box.hidden = true; return; }
+  if (req !== BENEF_REQ[k]) return;
+  if (k === 'at' && b.nascimento && !$('#at-nasc').value) $('#at-nasc').value = b.nascimento;
+  const ops = [], infos = [], c = b.clube, f = b.fidelidade;
+  if (c) {
+    const uso = c.usos_mes ? `${c.usados} de ${c.usos_mes} usos no mês` : `${c.usados} usos no mês (ilimitado)`;
+    if (c.cobre) ops.push(['CLUBE', `Usar o clube · ${c.plano}`, uso + ` · pago até ${dataBR(c.pago_ate)}`]);
+    else infos.push(!c.em_dia ? `Clube ${c.plano}: mensalidade vencida em ${dataBR(c.pago_ate)}. Receba na aba Clube para liberar.`
+      : !c.cobre_servico ? `Clube ${c.plano}: este serviço não está incluído no plano.`
+      : `Clube ${c.plano}: já usou os ${c.usos_mes} atendimentos deste mês.`);
+  }
+  if (f) {
+    if (f.disponivel) ops.push(['FIDELIDADE', 'Usar o prêmio da fidelidade (serviço grátis)', `${f.contagem} de ${f.meta} atendimentos completos`]);
+    else { const falta = f.meta - f.contagem; infos.push(`Fidelidade: ${f.contagem} de ${f.meta}. ${falta === 1 ? 'Falta 1 atendimento' : 'Faltam ' + falta + ' atendimentos'} para o prêmio.`); }
+  }
+  if (!ops.length && !infos.length) { box.hidden = true; recalcular(); return; }
+  box.innerHTML = (ops.length ? `<label class="op"><input type="radio" name="${k}-bn" value="" checked><span>Cobrar normalmente</span></label>`
+    + ops.map(([v, t, s]) => `<label class="op"><input type="radio" name="${k}-bn" value="${v}"><span><b>${esc(t)}</b><small>${esc(s)}</small></span></label>`).join('') : '')
+    + infos.map(i => `<p class="info">${esc(i)}</p>`).join('');
+  box.hidden = false;
+  box.querySelectorAll('input[type=radio]').forEach(r => r.addEventListener('change', () => { BENEF[k] = r.value || null; recalcular(); }));
+  recalcular();
+}
+
+// ---------- Lembretes dos horários de amanhã ----------
+async function lembretes() {
+  const card = $('#card-lembretes');
+  if (!INFO.usa_agendamento) { card.hidden = true; return; }
+  const am = maisDia(hojeISO(), 1);
+  const l = await sb.from('agendamento').select('id,inicio,lembrete_em,cliente(nome,telefone),servico(nome),barbeiro(nome)')
+    .eq('status', 'AGENDADO').gte('inicio', am + 'T00:00:00').lt('inicio', maisDia(am, 1) + 'T00:00:00').order('inicio').then(ok);
+  card.hidden = false;
+  $('#lembretes').innerHTML = l.length ? l.map(a => {
+    const nome = a.cliente?.nome || '', com = a.barbeiro?.nome ? ` com ${a.barbeiro.nome}` : '';
+    const msg = `Olá, ${nome.split(' ')[0]}! Passando para lembrar do seu horário amanhã (${dataBR(a.inicio)}) às ${hora(a.inicio)} na ${INFO.nome}: ${a.servico?.nome || ''}${com}. Podemos confirmar?`;
+    return `<div class="row2"><div style="min-width:52px"><b>${hora(a.inicio)}</b></div><div class="who"><b>${esc(nome)}</b><small>${esc(a.servico?.nome)}${a.barbeiro?.nome ? ' · ' + esc(a.barbeiro.nome) : ''}</small></div>
+      ${a.lembrete_em ? '<span class="chip ok">Lembrado</span>' : ''}
+      <a class="wa" data-lembrete="${a.id}" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(a.cliente?.telefone))}?text=${encodeURIComponent(msg)}">${a.lembrete_em ? 'Lembrar de novo' : 'Lembrar no WhatsApp'}</a></div>`;
+  }).join('') : vazio('Nenhum horário marcado para amanhã.');
+}
+$('#lembretes').addEventListener('click', e => {
+  const a = e.target.closest('a[data-lembrete]'); if (!a) return;
+  seguro(async () => { await rpc('agenda_lembrete', {p_id: Number(a.dataset.lembrete)}); setTimeout(() => seguro(lembretes), 800); });
+});
+
+// ---------- Aniversariantes (hoje até 7 dias) ----------
+let ANIV = [];
+async function aniversariantes() {
+  const l = await sb.from('cliente').select('id,nome,telefone,nascimento').not('nascimento', 'is', null).limit(5000).then(ok);
+  const hoje = new Date(); hoje.setHours(12, 0, 0, 0);
+  ANIV = l.map(c => {
+    const [, m, d] = c.nascimento.split('-').map(Number);
+    let prox = new Date(hoje.getFullYear(), m - 1, d, 12);
+    if (prox < hoje) prox = new Date(hoje.getFullYear() + 1, m - 1, d, 12);
+    return {...c, dias: Math.round((prox - hoje) / 864e5), dia: String(d).padStart(2, '0') + '/' + String(m).padStart(2, '0')};
+  }).filter(c => c.dias <= 7).sort((a, b) => a.dias - b.dias);
+  renderAniv();
+}
+function renderAniv() {
+  const tpl = $('#tpl-aniv').value;
+  $('#aniver').innerHTML = ANIV.length ? ANIV.map(c => {
+    const msg = tpl.split('{nome}').join(c.nome.split(' ')[0]).split('{barbearia}').join(INFO.nome);
+    const quando = c.dias === 0 ? 'Hoje! 🎂' : c.dias === 1 ? 'Amanhã' : `Em ${c.dias} dias (${c.dia})`;
+    return `<div class="row2"><span class="av">${esc((c.nome || '?')[0])}</span><div class="who"><b>${esc(c.nome)}</b><small>${c.dia}</small></div>
+      <span class="chip ${c.dias === 0 ? 'red' : 'blue'}">${quando}</span>
+      <a class="wa" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(c.telefone))}?text=${encodeURIComponent(msg)}">Parabenizar</a></div>`;
+  }).join('') : vazio('Nenhum aniversariante nos próximos 7 dias. Peça a data de nascimento no atendimento ou no link de agendamento.');
+}
+$('#tpl-aniv').addEventListener('input', renderAniv);
+
+// ---------- Clube de assinatura ----------
+let PLANOS = [], ASSIN = [], EDIT_PLANO = null, REC = null;
+const nomesServ = ids => ids.map(i => SERV.find(s => s.id === i)?.nome).filter(Boolean).join(', ') || 'nenhum serviço ativo';
+function situacaoAss(a) {
+  if (a.status !== 'ATIVA') return {cls: '', txt: 'Cancelada', cobrar: false};
+  const d = diasEntre(hojeISO(), a.pago_ate);
+  if (d < 0) return {cls: 'red', txt: `Vencida há ${-d} ${d === -1 ? 'dia' : 'dias'}`, cobrar: true};
+  if (d <= 3) return {cls: 'warn', txt: d === 0 ? 'Vence hoje' : `Vence em ${d} ${d === 1 ? 'dia' : 'dias'}`, cobrar: true};
+  return {cls: 'ok', txt: `Em dia até ${dataBR(a.pago_ate)}`, cobrar: false};
+}
+async function clube() {
+  const [pl, ps, as] = await Promise.all([
+    sb.from('clube_plano').select('id,nome,valor,usos_mes,ativo').order('nome').then(ok),
+    sb.from('clube_plano_servico').select('plano_id,servico_id').then(ok),
+    rpc('clube_assinantes'), carregarServicos()]);
+  PLANOS = pl.map(p => ({...p, servicos: ps.filter(x => x.plano_id === p.id).map(x => x.servico_id)}));
+  ASSIN = as;
+  $('#planos').innerHTML = PLANOS.length ? PLANOS.map(p => `<div class="row2" data-id="${p.id}"><div class="who"><b>${esc(p.nome)}${p.ativo ? '' : ' (inativo)'}</b>
+    <small>${brl(p.valor)} por mês · ${p.usos_mes ? p.usos_mes + ' usos por mês' : 'uso ilimitado'} · ${esc(nomesServ(p.servicos))}</small></div>
+    <span class="chip">${(n => n + (n === 1 ? ' assinante' : ' assinantes'))(ASSIN.filter(a => a.plano_id === p.id && a.status === 'ATIVA').length)}</span>
+    <button class="btn sec sm" type="button" data-a="editar">Editar</button></div>`).join('') : vazio('Nenhum plano ainda. Crie o primeiro em "Novo plano".');
+  const ativas = ASSIN.filter(a => a.status === 'ATIVA'), vencidas = ativas.filter(a => a.pago_ate < hojeISO());
+  $('#clube-resumo').innerHTML = `<div><p class="lab">Assinantes ativos</p><p class="num">${ativas.length}</p></div>
+    <div><p class="lab">Receita mensal do clube</p><p class="num">${brl(soma(ativas.map(a => a.valor)))}</p></div>
+    <div><p class="lab">Vencidas</p><p class="num">${vencidas.length}</p></div>`;
+  const lista = ativas.concat(ASSIN.filter(a => a.status !== 'ATIVA').slice(0, 10));
+  $('#assinantes').innerHTML = lista.length ? lista.map(a => {
+    const s = situacaoAss(a), uso = a.usos_mes ? `${a.usados} de ${a.usos_mes} usos no mês` : `${a.usados} usos no mês`;
+    const msg = `Olá, ${a.nome.split(' ')[0]}! Sua mensalidade do clube ${a.plano} (${brl(a.valor)}) ${a.pago_ate < hojeISO() ? 'venceu' : 'vence'} em ${dataBR(a.pago_ate)}. Vamos renovar para continuar aproveitando?`;
+    return `<div class="row2" data-id="${a.id}"><span class="av">${esc((a.nome || '?')[0])}</span><div class="who"><b>${esc(a.nome)}</b><small>${esc(a.plano)} · ${brl(a.valor)} · ${uso}</small></div>
+      <span class="chip ${s.cls}">${esc(s.txt)}</span>
+      ${a.status === 'ATIVA' ? `<div class="acts"><button class="btn sm" type="button" data-a="receber">Receber</button>
+        ${s.cobrar ? `<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${esc(whats(a.telefone))}?text=${encodeURIComponent(msg)}">Cobrar</a>` : ''}
+        <button class="btn sec sm" type="button" data-a="cancelar">Cancelar</button></div>` : ''}</div>`;
+  }).join('') : vazio('Nenhum assinante ainda. Crie um plano e use "Novo assinante".');
+  if (INFO.restrito) { $('#clube-pags').innerHTML = vazio('Disponível após o pagamento da mensalidade.'); return; }
+  const pags = await sb.from('clube_pagamento').select('id,assinatura_id,valor,forma_pagamento,pago_em,pago_ate_novo').order('pago_em', {ascending: false}).limit(20).then(ok);
+  $('#clube-pags').innerHTML = pags.length ? pags.map(p => {
+    const a = ASSIN.find(x => x.id === p.assinatura_id);
+    return `<div class="row2"><div class="who"><b>${esc(a?.nome || 'Assinante')}</b><small>${dataHoraBR(p.pago_em)} · ${esc(a?.plano || '')} · liberou até ${dataBR(p.pago_ate_novo)}</small></div>
+      <span class="chip">${esc(FORMAS[p.forma_pagamento] || '')}</span><b>${brl(p.valor)}</b>
+      <button class="btn sec sm btn-excluir-lancamento" type="button" data-tipo="CLUBE" data-id="${p.id}">Excluir</button></div>`;
+  }).join('') : vazio('Nenhuma mensalidade recebida ainda.');
+}
+function abrirPlano(p) {
+  EDIT_PLANO = p?.id || null;
+  $('#pl-tit').textContent = p ? 'Editar plano' : 'Novo plano';
+  $('#pl-n').value = p?.nome || ''; $('#pl-v').value = p ? Number(p.valor) : ''; $('#pl-u').value = p?.usos_mes || '';
+  $('#pl-a').checked = p ? p.ativo : true; $('#pl-err').textContent = '';
+  $('#pl-servs').innerHTML = SERV.length ? SERV.map(s => `<label><input type="checkbox" value="${s.id}"${p?.servicos.includes(s.id) ? ' checked' : ''}> ${esc(s.nome)} (${brl(s.preco)})</label>`).join('')
+    : '<p class="lab">Cadastre os serviços primeiro, na aba Serviços.</p>';
+  $('#dPlano').showModal();
+}
+$('#novo-plano').addEventListener('click', () => seguro(async () => { await carregarServicos(); abrirPlano(null); }));
+$('#planos').addEventListener('click', e => {
+  const b = e.target.closest('button[data-a="editar"]'); if (!b) return;
+  abrirPlano(PLANOS.find(p => p.id === Number(b.closest('[data-id]').dataset.id)));
+});
+$('#fPlano').addEventListener('submit', async e => {
+  e.preventDefault(); $('#pl-err').textContent = '';
+  try {
+    await rpc('clube_plano_salvar', {p_id: EDIT_PLANO, p_nome: $('#pl-n').value, p_valor: Number($('#pl-v').value),
+      p_usos_mes: $('#pl-u').value === '' ? null : Number($('#pl-u').value),
+      p_servicos: [...document.querySelectorAll('#pl-servs input:checked')].map(i => Number(i.value)), p_ativo: $('#pl-a').checked});
+    $('#dPlano').close(); toast('Plano salvo.'); await clube();
+  } catch (x) { $('#pl-err').textContent = x.message; }
+});
+$('#novo-assinante').addEventListener('click', () => seguro(async () => {
+  if (!PLANOS.length) await clube();
+  const ativos = PLANOS.filter(p => p.ativo);
+  if (!ativos.length) { toast('Crie um plano primeiro, logo abaixo em "Novo plano".', true); return; }
+  await carregarClientesAtendimento();
+  $('#as-cli').innerHTML = '<option value="">Novo cliente — preencher abaixo</option>' + CLIENTES_AT.map(c => `<option value="${c.id}">${esc(c.nome)} — ${esc(c.telefone)}</option>`).join('');
+  $('#as-p').innerHTML = ativos.map(p => `<option value="${p.id}">${esc(p.nome)} · ${brl(p.valor)}/mês</option>`).join('');
+  $('#as-f').innerHTML = opcoes(FORMAS); $('#as-n').value = ''; $('#as-t').value = ''; $('#as-novo').hidden = false; $('#as-err').textContent = '';
+  $('#dAss').showModal();
+}));
+$('#as-cli').addEventListener('change', () => { $('#as-novo').hidden = !!$('#as-cli').value; });
+$('#fAss').addEventListener('submit', async e => {
+  e.preventDefault(); $('#as-err').textContent = '';
+  try {
+    await rpc('clube_assinar', {p_plano: Number($('#as-p').value), p_forma: $('#as-f').value, p_cliente: Number($('#as-cli').value) || null,
+      p_nome: $('#as-n').value.trim() || null, p_telefone: $('#as-t').value.trim() || null});
+    $('#dAss').close(); toast('Assinatura criada e primeiro mês recebido.'); await clube(); seguro(painel);
+  } catch (x) { $('#as-err').textContent = x.message; }
+});
+$('#assinantes').addEventListener('click', e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const a = ASSIN.find(x => x.id === Number(b.closest('[data-id]').dataset.id)); if (!a) return;
+  if (b.dataset.a === 'receber') {
+    REC = a; $('#rec-info').textContent = `${a.nome} · ${a.plano} · ${brl(a.valor)} · vencimento ${dataBR(a.pago_ate)}`;
+    $('#rec-f').innerHTML = opcoes(FORMAS); $('#rec-err').textContent = ''; $('#dRec').showModal(); return;
+  }
+  if (b.dataset.a === 'cancelar') {
+    if (!confirm(`Cancelar a assinatura de ${a.nome}? O histórico continua guardado.`)) return;
+    seguro(async () => { await rpc('clube_cancelar', {p_assinatura: a.id}); toast('Assinatura cancelada.'); await clube(); });
+  }
+});
+$('#fRec').addEventListener('submit', async e => {
+  e.preventDefault(); $('#rec-err').textContent = '';
+  try {
+    const ate = await rpc('clube_receber', {p_assinatura: REC.id, p_forma: $('#rec-f').value});
+    $('#dRec').close(); toast(`Mensalidade recebida. Clube liberado até ${dataBR(ate)}.`); await clube(); seguro(painel);
+  } catch (x) { $('#rec-err').textContent = x.message; }
+});
+$('#cf-fid').addEventListener('change', () => { $('#cf-fid-box').hidden = !$('#cf-fid').checked; });
+
 // ======================= ADMINISTRAÇÃO (só acesso e cobrança) =======================
 let LISTA = [], MENSAGEM = '', HIST_PAGAMENTOS = [], EVOLUCAO = [], AQUISICOES_PAGAS = new Set();
 const TAXA_AQUISICAO = 99.90, MENSALIDADE_OFICIAL = 24.90;
@@ -1050,7 +1256,7 @@ $('#form-publico-agendamento').addEventListener('submit', async e => {
   try {
     const inicio = $('#pub-hora').value;
     if (!inicio) throw new Error('Escolha um horário disponível.');
-    await rpc('public_agenda_marcar_v2', {p_barbearia_id: Number(PUBLICO.id), p_nome: $('#pub-cliente').value.trim(), p_telefone: $('#pub-telefone').value, p_servico: Number($('#pub-servico').value), p_inicio: inicio + ':00', p_barbeiro: Number($('#pub-barbeiro').value) || null});
+    await rpc('public_agenda_marcar_v3', {p_barbearia_id: Number(PUBLICO.id), p_nome: $('#pub-cliente').value.trim(), p_telefone: $('#pub-telefone').value, p_servico: Number($('#pub-servico').value), p_inicio: inicio + ':00', p_barbeiro: Number($('#pub-barbeiro').value) || null, p_nascimento: $('#pub-nasc').value || null});
     const resumo = $('#pub-resumo').textContent;
     $('#form-publico-agendamento').hidden = true;
     $('#pub-sucesso-txt').textContent = (resumo ? resumo + '. ' : '') + 'Se precisar alterar o horário, entre em contato diretamente com a barbearia.';
