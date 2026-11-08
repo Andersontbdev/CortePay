@@ -3,7 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CortePay</title>
+<title>CortePay · gestão para barbearias</title>
+<meta name="description" content="Sistema de gestão para barbearias: agenda online, caixa, comissões, estoque, clube de assinatura e relatórios. Funciona no celular. Comece grátis.">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CortePay · gestão para barbearias">
+<meta property="og:description" content="Agenda online, caixa, comissões, estoque, clube e relatórios num só sistema, feito para o celular.">
+<script>
+// Quem já está conectado, ou abriu um link de agendamento/convite, não vê a página inicial piscar antes da tela certa.
+(function () { try {
+  var logado = Object.keys(localStorage).some(function (k) { return /^sb-.*-auth-token$/.test(k); });
+  if (logado || /[?&](agendar|convite)=/.test(location.search)) document.documentElement.classList.add('sem-inicio');
+} catch (e) { /* sem armazenamento: mostra a página inicial */ } })();
+</script>
 <meta name="theme-color" content="#0E1A2B">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icones/favicon-64.png">
@@ -13,7 +25,7 @@
 <meta name="apple-mobile-web-app-title" content="CortePay">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 <meta name="color-scheme" content="only light">
 </head>
 <body>
@@ -44,7 +56,136 @@
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
 </svg>
 <div class="pole" aria-hidden="true"></div>
+
+<div id="tela-inicio" class="lp">
+  <header class="lp-nav">
+    <div class="lp-nav-in">
+      <a class="lp-marca" href="#topo" aria-label="Início"><span class="logo-i"><svg class="i" aria-hidden="true"><use href="#i-scissors"/></svg></span><span class="pv-nome">CortePay</span></a>
+      <nav class="lp-links" aria-label="Seções da página">
+        <a href="#recursos">Recursos</a><a href="#lp-planos">Planos</a><a href="#duvidas">Dúvidas</a>
+      </nav>
+      <button class="btn sec sm lp-entrar" type="button" data-ir="login">Entrar</button>
+    </div>
+  </header>
+
+  <section class="lp-hero" id="topo">
+    <div class="lp-hero-in">
+      <div>
+        <p class="lp-eyebrow"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg>Feito para barbearias</p>
+        <h1>Sua barbearia organizada, <em>da agenda ao caixa</em></h1>
+        <p class="lp-lead">Agenda online, comissões, estoque, clube de assinatura e relatórios num só sistema. Funciona no celular e no computador, sem instalar nada.</p>
+        <div class="lp-cta">
+          <a class="btn lp-btn" data-wa="conhecer" target="_blank" rel="noopener" hidden>Falar no WhatsApp</a>
+          <button class="btn sec lp-btn" type="button" data-ir="login">Já sou cliente: entrar</button>
+        </div>
+        <p class="lp-nota">Comece no plano gratuito. Não pedimos cartão de crédito.</p>
+      </div>
+      <div class="lp-mock" role="img" aria-label="Exemplo ilustrativo do painel do sistema">
+        <div class="lp-mock-top"><span>Lucro da semana</span><span class="lp-mock-tag">Exemplo ilustrativo</span></div>
+        <p class="lp-mock-valor">R$ 1.330,00</p>
+        <div class="lp-mock-bars" aria-hidden="true"><i style="--h:38%"></i><i style="--h:52%"></i><i style="--h:63%"></i><i style="--h:74%"></i><i class="top" style="--h:100%"></i><i style="--h:76%"></i></div>
+        <div class="lp-mock-dias" aria-hidden="true"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
+        <div class="lp-mock-lista" aria-hidden="true">
+          <div class="lp-mock-item"><b>09:00 · Corte</b><span>Confirmado</span></div>
+          <div class="lp-mock-item"><b>10:30 · Corte e barba</b><span>Confirmado</span></div>
+          <div class="lp-mock-item"><b>14:00 · Barba</b><span>Agendado</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp-confianca" aria-label="Pontos de confiança">
+    <div class="lp-confianca-in">
+      <div class="lp-conf"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg></span><div><b>Cada barbearia só vê os seus dados</b><span>Clientes, agenda e valores ficam separados por barbearia.</span></div></div>
+      <div class="lp-conf"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><div><b>Nunca pedimos senha de banco ou cartão</b><span>O sistema não processa pagamentos nem pede dados bancários.</span></div></div>
+      <div class="lp-conf"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-down"/></svg></span><div><b>Instale como app no celular</b><span>Abre rápido e fica na tela inicial, como um aplicativo.</span></div></div>
+    </div>
+  </section>
+
+  <section class="lp-sec" id="recursos">
+    <div class="lp-sec-cab"><h2>Tudo o que o dia a dia da barbearia pede</h2><p>Do primeiro atendimento ao fechamento do mês, sem planilha e sem caderno.</p></div>
+    <div class="lp-grade">
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg></span><h3>Painel de ganhos e gastos</h3><p>Lucro do dia, da semana e do mês, formas de pagamento e para onde o dinheiro está indo.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg></span><h3>Agenda e agendamento online</h3><p>Seus clientes marcam pelo link, e a agenda evita horário duplicado.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></span><h3>Barbeiros e comissões</h3><p>Cada atendimento com o barbeiro certo e a comissão calculada sozinha, com vales e fechamento.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-cash"/></svg></span><h3>Caixa do dia</h3><p>Abertura, sangrias e fechamento com a conferência do dinheiro na gaveta.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-box"/></svg></span><h3>Estoque e produtos</h3><p>Controle de produtos de uso e de venda, com aviso de estoque baixo.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-crown"/></svg></span><h3>Clube de assinatura</h3><p>Planos mensais para seus clientes: receita garantida todo mês.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><h3>Programa de fidelidade</h3><p>A cada tantos atendimentos, o próximo é por conta da casa.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg></span><h3>Lembretes e clientes para chamar</h3><p>Lembrete dos horários de amanhã, parabéns no aniversário e aviso de quem sumiu, para chamar com uma promoção.</p></article>
+      <article class="lp-card"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg></span><h3>Relatórios</h3><p>Faturamento, horários de pico, desempenho por barbeiro, faltas e produtos mais vendidos.</p></article>
+    </div>
+  </section>
+
+  <section class="lp-sec lp-sec-alt" id="como">
+    <div class="lp-sec-cab"><h2>Como começar</h2><p>Em poucos minutos a sua barbearia já está no sistema.</p></div>
+    <ol class="lp-passos">
+      <li><b>Fale com a gente</b><span>Chame pelo WhatsApp ou e-mail e conte sobre a sua barbearia.</span></li>
+      <li><b>Receba o seu convite</b><span>Você recebe um código, cria a sua conta e já pode entrar.</span></li>
+      <li><b>Cadastre os serviços e comece a lançar</b><span>Os primeiros atendimentos já alimentam o painel.</span></li>
+    </ol>
+  </section>
+
+  <section class="lp-sec" id="lp-planos">
+    <div class="lp-sec-cab"><h2>Planos</h2><p>Comece grátis e libere os recursos extras quando fizer sentido para a sua barbearia.</p></div>
+    <div class="lp-planos">
+      <article class="lp-plano">
+        <h3>Free</h3>
+        <p class="lp-preco">Grátis</p><p class="sub">Para começar, sem prazo.</p>
+        <ul class="lp-lista">
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Painel de ganhos, gastos e lucro</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Atendimentos com desconto e forma de pagamento</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Cadastro de serviços e preços</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Seu nome e logotipo no sistema</li>
+        </ul>
+        <button class="btn sec lp-btn" type="button" data-ir="login">Entrar</button>
+      </article>
+      <article class="lp-plano pro">
+        <span class="selo">Mais completo</span>
+        <h3>Pro</h3>
+        <p class="lp-preco"><span id="lp-preco">R$ 24,90</span><small> /mês</small></p><p class="sub" id="lp-impl"></p>
+        <ul class="lp-lista">
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Tudo do plano Free</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Agenda e link de agendamento online</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Barbeiros e comissões</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Caixa, estoque e venda de produtos</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Clube de assinatura e fidelidade</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Lembretes, aniversariantes e clientes para chamar</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Relatórios completos</li>
+        </ul>
+        <a class="btn lp-btn" data-wa="pro" target="_blank" rel="noopener" hidden>Quero o Pro</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="lp-sec lp-sec-alt lp-faq" id="duvidas">
+    <div class="lp-sec-cab"><h2>Dúvidas frequentes</h2></div>
+    <details><summary>Preciso instalar alguma coisa?</summary><p>Não. O sistema abre no navegador do celular ou do computador. Se quiser, dá para instalar como aplicativo na tela inicial.</p></details>
+    <details><summary>Como funciona o pagamento da mensalidade?</summary><p>A mensalidade do plano Pro é paga por Pix, combinada diretamente com a gente. O sistema não pede cartão nem dados bancários.</p></details>
+    <details><summary>Os dados dos meus clientes ficam seguros?</summary><p>Cada barbearia só enxerga os próprios dados. Pelo sistema, a administração vê apenas acesso e cobrança, nunca clientes, agenda ou gastos. Veja a <button class="link" type="button" data-privacidade>Política de Privacidade</button>.</p></details>
+    <details><summary>O que acontece se eu atrasar a mensalidade do Pro?</summary><p>Passados alguns dias de tolerância, você continua lançando atendimentos e gastos, mas a visualização de ganhos, gastos e lucro fica bloqueada até regularizar. Seus dados continuam guardados.</p></details>
+  </section>
+
+  <section class="lp-final">
+    <div class="lp-final-in">
+      <div><h2>Pronto para organizar a sua barbearia?</h2><p>Fale com a gente e comece hoje.</p></div>
+      <div class="lp-cta">
+        <a class="btn lp-btn" data-wa="conhecer" target="_blank" rel="noopener" hidden>Falar no WhatsApp</a>
+        <button class="btn sec lp-btn" type="button" data-ir="login">Entrar</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lp-rodape">
+    <div class="lp-rodape-in">
+      <span>&copy; <span id="lp-ano"></span> <span class="pv-nome">CortePay</span></span>
+      <span id="lp-contato" hidden>Contato: <a id="lp-email"></a></span>
+      <button class="link" type="button" data-privacidade>Política de Privacidade</button>
+    </div>
+  </footer>
+</div>
 <main id="tela-login" class="card login-card" hidden>
+  <button class="link" type="button" data-ir="inicio">&larr; Voltar ao início</button>
   <h1>Bem-vindo</h1>
   <p class="sub" style="margin-bottom:16px">Sistema para barbearias.</p>
   <div class="seg" role="group" aria-label="Entrar ou criar conta">
@@ -99,7 +240,7 @@
       <p class="success-message" style="margin:0 0 6px">Agendamento confirmado!</p>
       <p class="sub" id="pub-sucesso-txt" style="margin:0"></p>
     </div>
-    <p class="lab public-foot">Seu horário só estará reservado após a confirmação nesta tela.</p>
+    <p class="lab public-foot">Seu horário só estará reservado após a confirmação nesta tela. Seu nome e WhatsApp são enviados à barbearia para o atendimento (<button class="link" type="button" data-privacidade>Política de Privacidade</button>).</p>
   </section>
 </main>
 
@@ -131,7 +272,7 @@
     <button class="side-link destaque" id="instalar" type="button" hidden><svg class="i" aria-hidden="true"><use href="#i-down"/></svg><span>Instalar o app</span></button>
     <button class="side-link" id="tema-toggle" type="button" aria-pressed="false" aria-label="Ativar modo escuro"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg><span>Modo escuro</span></button>
     <button class="side-link" id="cfg" type="button"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg><span>Configurar</span></button>
-    <small class="versao">CortePay · versão 9</small>
+    <small class="versao">CortePay · versão 10</small>
     <button class="side-link" id="sair" type="button"><svg class="i" aria-hidden="true"><use href="#i-out"/></svg><span>Sair</span></button>
   </div>
 </aside>
@@ -584,7 +725,7 @@
 <div id="tela-admin" hidden>
 <div class="wrap">
 <header>
-  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias · versão 9</p></div>
+  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias · versão 10</p></div>
   <div class="acts">
     <button class="btn sm" id="nova" type="button">Nova barbearia</button>
     <button class="btn sec sm" id="a-sair" type="button">Sair</button>
@@ -708,8 +849,38 @@
   <p class="err" id="ns-err" role="alert"></p>
   <div class="acts"><button class="btn">Salvar senha</button></div>
 </form></dialog>
+<dialog id="dPrivacidade">
+<form method="dialog">
+  <h2>Política de Privacidade</h2>
+  <div class="politica">
+    <p class="sub">Atualizada em novembro de 2026.</p>
+    <h3>Quem somos</h3>
+    <p><span class="pv-nome">CortePay</span> é um sistema de gestão para barbearias. Para falar sobre dados pessoais, escreva para <span class="pv-email"></span>.</p>
+    <h3>Quais dados tratamos</h3>
+    <p><strong>Dados da barbearia (o contratante):</strong> e-mail de acesso, nome da barbearia, telefone ou WhatsApp, logotipo, plano e situação da mensalidade. Usamos para criar o acesso, operar o sistema e fazer a cobrança.</p>
+    <p><strong>Dados que a barbearia cadastra sobre os próprios clientes:</strong> nome, telefone, data de nascimento (opcional), serviços feitos, horários, valores, formas de pagamento e assinaturas do clube. Quem decide o que registrar, e por quê, é a barbearia. Nós apenas guardamos esses dados e os mostramos só para ela. A barbearia é responsável por avisar os seus clientes e usar os dados somente para atendê-los.</p>
+    <p><strong>Agendamento online:</strong> quando um cliente agenda pelo link da barbearia, o nome, o WhatsApp e a data de nascimento (opcional) informados vão para a barbearia escolhida.</p>
+    <h3>Quem pode ver os dados</h3>
+    <p>Cada barbearia enxerga somente os seus dados. Pelo sistema, a administração vê apenas acesso e cobrança, e não vê clientes, agenda, atendimentos nem gastos. Como mantemos o banco de dados, o responsável técnico tem acesso técnico a ele e não o usa para outros fins.</p>
+    <h3>Pagamentos e WhatsApp</h3>
+    <p>O sistema não processa pagamentos nem guarda dados de cartão ou de conta bancária: ele apenas registra os valores informados pela barbearia. A mensalidade do plano Pro é combinada diretamente por Pix. Os botões de WhatsApp abrem o aplicativo da própria barbearia com a mensagem pronta. O sistema não envia mensagens sozinho e não repassa telefones a terceiros para publicidade.</p>
+    <h3>Onde os dados ficam</h3>
+    <p>Usamos serviços de nuvem de terceiros: Supabase (banco de dados e login) e Vercel (hospedagem do site). O site também carrega fontes do Google Fonts. Esses serviços podem processar dados em servidores fora do Brasil.</p>
+    <h3>Armazenamento no navegador</h3>
+    <p>Usamos o armazenamento do navegador para manter você conectado, lembrar o tema (claro ou escuro) e guardar uma cópia dos arquivos do site, que permite instalar o app e abrir a tela com internet instável. Não usamos cookies de publicidade nem rastreamento.</p>
+    <h3>Por quanto tempo guardamos</h3>
+    <p>Enquanto o contrato estiver ativo. A barbearia pode pedir a exclusão dos seus dados a qualquer momento, pelo contato acima.</p>
+    <h3>Seus direitos</h3>
+    <p>Pela Lei Geral de Proteção de Dados (LGPD), você pode pedir acesso, correção, exclusão e portabilidade dos seus dados, entre outros direitos. Se você é cliente de uma barbearia, fale primeiro com ela, que é quem decide o uso dos seus dados.</p>
+    <h3>Segurança</h3>
+    <p>A conexão é protegida (HTTPS), as senhas são guardadas de forma protegida pelo serviço de login e o banco de dados tem regras que impedem uma barbearia de acessar os dados de outra.</p>
+    <h3>Mudanças</h3>
+    <p>Esta política pode mudar. A data da última atualização fica no topo.</p>
+  </div>
+  <div class="acts"><button class="btn">Fechar</button></div>
+</form></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="script.js?v=9"></script>
+<script src="script.js?v=10"></script>
 </body>
 </html>

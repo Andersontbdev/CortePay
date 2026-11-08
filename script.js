@@ -3,6 +3,12 @@
 // A chave pública (anon/publishable) pode ficar aqui: a segurança está nas regras do banco (supabase.sql).
 const SUPABASE_URL = 'https://qiwjxoymaccslovinfgx.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_wI9HINvYa3vAKvKABdr3NQ_xSH_MZSI';
+
+// ---- Página inicial pública (edite aqui) ----
+const NOME_SISTEMA = 'CortePay';                        // nome mostrado na página inicial e na política
+const WHATSAPP_CONTATO = '55SEUDDDSEUNUMERO';           // só números, com 55 e DDD. Ex.: 5511999998888 (enquanto vazio, o botão fica escondido)
+const EMAIL_CONTATO = 'seu-email@exemplo.com';          // e-mail de contato (rodapé e política de privacidade)
+const TITULO_SITE = NOME_SISTEMA + ' · gestão para barbearias';
 // ============================================================
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -49,8 +55,12 @@ function toast(msg, erro) {
   clearTimeout(toast.id); toast.id = setTimeout(() => t.hidden = true, 4000);
 }
 const seguro = fn => fn().catch(e => toast(e.message, true));
-const TELAS = ['tela-login', 'tela-convite', 'tela-app', 'tela-admin', 'tela-publico'];
-const tela = id => TELAS.forEach(t => $('#' + t).hidden = t !== id);
+const TELAS = ['tela-inicio', 'tela-login', 'tela-convite', 'tela-app', 'tela-admin', 'tela-publico'];
+const tela = id => {
+  TELAS.forEach(t => $('#' + t).hidden = t !== id);
+  if (id === 'tela-inicio') document.documentElement.classList.remove('sem-inicio');
+  if (id === 'tela-inicio' || id === 'tela-login') { document.title = TITULO_SITE; window.scrollTo(0, 0); }
+};
 
 $('#copiar-link-agendamento').addEventListener('click', async () => {
   const url = $('#link-agendamento').value;
@@ -122,13 +132,13 @@ $('#fSenha').addEventListener('submit', async e => {
   try { ok(await sb.auth.updateUser({password: $('#ns-s').value})); $('#dSenha').close(); toast('Senha alterada.'); }
   catch (x) { $('#ns-err').textContent = x.message; }
 });
-async function sair() { await sb.auth.signOut(); tela('tela-login'); }
+async function sair() { await sb.auth.signOut(); tela('tela-inicio'); }
 $('#cv-sair').addEventListener('click', sair);
 sb.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') $('#dSenha').showModal(); });
 
 async function entrar() {
   const {data: {session}} = await sb.auth.getSession();
-  if (!session) return tela('tela-login');
+  if (!session) return tela('tela-inicio');
   const p = await sb.from('perfil').select('papel,barbearia_id').maybeSingle().then(ok);
   if (!p) { $('#cv-cod').value = guarda('convite') || ''; return tela('tela-convite'); }
   if (p.papel === 'ADMIN') { tela('tela-admin'); return seguro(admCarregar); }
@@ -1593,6 +1603,26 @@ $('#form-publico-agendamento').addEventListener('submit', async e => {
   finally { botao.disabled = false; botao.textContent = 'Confirmar agendamento'; }
 });
 
+// ======================= PÁGINA INICIAL =======================
+document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => tela(b.dataset.ir === 'login' ? 'tela-login' : 'tela-inicio')));
+document.querySelectorAll('[data-privacidade]').forEach(b => b.addEventListener('click', () => $('#dPrivacidade').showModal()));
+(function conteudoInicial() {
+  document.querySelectorAll('.pv-nome').forEach(e => e.textContent = NOME_SISTEMA);
+  $('#lp-ano').textContent = new Date().getFullYear();
+  $('#lp-preco').textContent = brl(PRECO_PRO);
+  $('#lp-impl').textContent = TAXA_AQUISICAO > 0 ? `+ implantação única de ${brl(TAXA_AQUISICAO)}` : '';
+  const wa = /^\d{10,15}$/.test(WHATSAPP_CONTATO);
+  const msgs = {conhecer: `Olá! Quero conhecer o ${NOME_SISTEMA} para a minha barbearia.`, pro: `Olá! Quero saber mais sobre o plano Pro do ${NOME_SISTEMA}.`};
+  document.querySelectorAll('[data-wa]').forEach(a => {
+    a.hidden = !wa;
+    if (wa) a.href = 'https://wa.me/' + WHATSAPP_CONTATO + '?text=' + encodeURIComponent(msgs[a.dataset.wa] || msgs.conhecer);
+  });
+  const mail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(EMAIL_CONTATO) && !EMAIL_CONTATO.includes('exemplo');
+  $('#lp-contato').hidden = !mail;
+  document.querySelectorAll('.pv-email').forEach(e => e.textContent = mail ? EMAIL_CONTATO : 'o contato indicado no rodapé do site');
+  if (mail) { $('#lp-email').textContent = EMAIL_CONTATO; $('#lp-email').href = 'mailto:' + EMAIL_CONTATO; }
+})();
+
 // ======================= INÍCIO =======================
 (function inicio() {
   const params = new URLSearchParams(location.search);
@@ -1600,5 +1630,6 @@ $('#form-publico-agendamento').addEventListener('submit', async e => {
   if (agendar && /^\d+$/.test(agendar)) { iniciarAgendamentoPublico(agendar); return; }
   const conv = params.get('convite');
   if (conv) { guarda('convite', conv); $('#cd-c').value = conv; document.querySelector('[data-lt="cadastro"]').click(); }
-  entrar().catch(e => { tela('tela-login'); toast(e.message, true); });
+  entrar().then(() => { if (conv && !$('#tela-inicio').hidden) tela('tela-login'); })
+    .catch(e => { tela('tela-inicio'); toast(e.message, true); });
 })();
