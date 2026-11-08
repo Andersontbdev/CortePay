@@ -1,16 +1,17 @@
 // ======================= CONFIGURAÇÃO =======================
 // Cole aqui os dados do seu projeto no Supabase (Project Settings > API).
 // A chave pública (anon/publishable) pode ficar aqui: a segurança está nas regras do banco (supabase.sql).
-const SUPABASE_URL = 'https://qiwjxoymaccslovinfgx.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_wI9HINvYa3vAKvKABdr3NQ_xSH_MZSI';
+const SUPABASE_URL = 'COLE_AQUI_A_URL_DO_PROJETO';
+const SUPABASE_KEY = 'COLE_AQUI_A_CHAVE_PUBLICA';
+
 // ---- Dados da página inicial (edite aqui) ----
-const NOME_SISTEMA = 'BarberFácil';        // nome que aparece no site (use um nome neutro, sem "pay")
-const WHATSAPP_CONTATO = '5511981856463';           // só números, com 55 e DDD. Ex.: 5511999998888
-const EMAIL_CONTATO = 'anderson.tbdev@gmail.com';          // e-mail de contato (aparece no rodapé e na política)
+const NOME_SISTEMA = 'Sistema para barbearias';        // nome que aparece no site (use um nome neutro, sem "pay")
+const WHATSAPP_CONTATO = '55SEUDDDSEUNUMERO';           // só números, com 55 e DDD. Ex.: 5511999998888
+const EMAIL_CONTATO = 'seu-email@exemplo.com';          // e-mail de contato (aparece no rodapé e na política)
 const PRECO_MENSAL = 24.90;                              // valor mostrado na página inicial
 const DIAS_TESTE = 15;                                   // dias de teste mostrados na página inicial
 // ============================================================
- 
+
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = (s, r = document) => r.querySelector(s);
 // Todo texto vindo do banco passa por esc() antes de entrar na página (protege contra código malicioso).
@@ -30,7 +31,7 @@ function traduz(m) {
 }
 const ok = ({data, error}) => { if (error) throw new Error(traduz(error.message)); return data; };
 const rpc = (nome, args) => sb.rpc(nome, args).then(ok);
- 
+
 function toast(msg, erro) {
   const t = $('#toast');
   t.textContent = msg; t.className = 'toast' + (erro ? ' erro' : ''); t.hidden = false;
@@ -39,7 +40,7 @@ function toast(msg, erro) {
 const seguro = fn => fn().catch(e => toast(e.message, true));
 const TELAS = ['tela-inicio', 'tela-login', 'tela-convite', 'tela-app', 'tela-admin'];
 const tela = id => { TELAS.forEach(t => $('#' + t).hidden = t !== id); if (id !== 'tela-app') document.title = NOME_SISTEMA; window.scrollTo(0, 0); };
- 
+
 // ---------- Datas e textos ----------
 const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const hojeISO = () => iso(new Date());
@@ -64,7 +65,7 @@ const kp = (a, b) => `<div class="kp"><span class="lab">${esc(a)}</span><span cl
 const vazio = t => `<p class="lab">${esc(t)}</p>`;
 const soma = a => a.reduce((s, x) => s + Number(x), 0);
 document.addEventListener('click', e => { const c = e.target.closest('[data-close]'); if (c) c.closest('dialog').close(); });
- 
+
 // ======================= ENTRADA (login, cadastro, convite) =======================
 document.querySelectorAll('[data-lt]').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('[data-lt]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
@@ -103,7 +104,7 @@ $('#fSenha').addEventListener('submit', async e => {
 async function sair() { await sb.auth.signOut(); tela('tela-inicio'); }
 $('#cv-sair').addEventListener('click', sair);
 sb.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') $('#dSenha').showModal(); });
- 
+
 async function entrar() {
   const {data: {session}} = await sb.auth.getSession();
   if (!session) return tela('tela-inicio');
@@ -115,10 +116,10 @@ async function entrar() {
   INFO = {...b, restrito: s[0].restrito, situacao: s[0].situacao};
   tudoDoPainel();
 }
- 
+
 // ======================= BARBEARIA =======================
 let INFO, PER = 'semana', SERV = [], ATR = [], DIA = hojeISO(), CONCLUIR = null, NOVALOGO = null;
- 
+
 function marca() {
   $('#bn').textContent = INFO.nome;
   document.title = 'Painel da ' + INFO.nome;
@@ -136,7 +137,7 @@ function marca() {
     ? '<b>Mensalidade em atraso.</b> Você continua lançando atendimentos e gastos normalmente, mas os painéis de ganhos, gastos e lucro ficam bloqueados até o pagamento. Fale com o administrador para regularizar.'
     : '<b>Sua mensalidade está atrasada.</b> Regularize para não perder a visualização dos painéis.';
 }
- 
+
 async function painel() {
   if (INFO.restrito) return;
   const [i0, i1] = intervalo(PER);
@@ -164,20 +165,20 @@ async function painel() {
   $('#kpi').innerHTML = kp('Gastos sobre o que entrou', (entrou ? Math.round(gastos / entrou * 100) : 0) + '%') + kp('Margem de lucro', (entrou ? Math.round(lucro / entrou * 100) : 0) + '%')
     + kp('Maior gasto', cats.length ? CATS[cats[0][0]] : '-') + kp('Gasto por atendimento', brl(at.length ? gastos / at.length : 0));
 }
- 
+
 async function recentes() {
   if (INFO.restrito) return;
   const l = await sb.from('atendimento').select('valor_final,desconto,forma_pagamento,data_hora,cliente(nome),servico(nome)').order('data_hora', {ascending: false}).limit(20).then(ok);
   $('#ult').innerHTML = l.length ? l.map(a => `<div class="row2"><span class="av">${esc((a.cliente?.nome || '?')[0])}</span><div class="who"><b>${esc(a.cliente?.nome)}</b><small>${esc(a.servico?.nome)}${Number(a.desconto) > 0 ? ' (desconto de ' + brl(a.desconto) + ')' : ''}</small></div><span class="chip">${esc(FORMAS[a.forma_pagamento] || '')}</span><b>${brl(a.valor_final)}</b></div>`).join('') : vazio('Nenhum atendimento ainda.');
 }
- 
+
 async function ranking() {
   const [i0, i1] = intervalo(PER);
   const l = await rpc('ranking', {p_de: i0, p_ate: i1});
   const mx = Math.max(1, ...l.map(x => x.visitas));
   $('#rank').innerHTML = l.length ? l.map(c => `<div class="row"><span class="av">${esc(c.nome[0] || '?')}</span><span class="nm" style="flex:1">${esc(c.nome)}</span><div class="tr" style="max-width:120px"><i style="width:${Math.round(c.visitas / mx * 100)}%"></i></div><span class="v" style="min-width:70px">${c.visitas} ${c.visitas === 1 ? 'visita' : 'visitas'}</span></div>`).join('') : vazio('Ainda não há atendimentos neste período.');
 }
- 
+
 // Ritmo de cada cliente: com 3 visitas ou mais, calcula o intervalo médio; passou de 1,5x esse intervalo = cliente para chamar.
 async function dadosFreq() {
   const [vis, cli, con] = await Promise.all([rpc('visitas'), sb.from('cliente').select('id,nome,telefone').limit(5000).then(ok),
@@ -257,7 +258,7 @@ async function resultado() {
   $('#ms').innerHTML = ult.length ? ult.map(u => `<div class="row2"><span class="av">${esc((nomes[u.c.cliente_id] || '?')[0])}</span><div class="who"><b>${esc(nomes[u.c.cliente_id])}</b><small>${esc(u.c.promocao)}</small></div><span class="chip">${sit[u.s]}${u.d != null ? ' em ' + u.d + ' dias' : ''}</span></div>`).join('') : vazio('Nenhuma mensagem enviada.');
 }
 function tudoDoPainel() { marca(); [painel, recentes, ranking, atrasados, resultado].forEach(f => seguro(f)); }
- 
+
 // ---------- Agenda ----------
 async function agenda() {
   if (!INFO.usa_agendamento) return;
@@ -286,7 +287,7 @@ async function livres() {
   }
   $('#ag-h').innerHTML = out.length ? out.map(h => `<option value="${h}">${h}</option>`).join('') : '<option value="">Sem horários livres</option>';
 }
- 
+
 // ---------- Serviços e gastos ----------
 async function carregarServicos() { SERV = await sb.from('servico').select('id,nome,preco,duracao_min').eq('ativo', true).order('nome').then(ok); }
 async function servicos() {
@@ -302,7 +303,7 @@ async function gastos() {
   const l = await sb.from('despesa').select('descricao,categoria,valor,data_despesa').order('data_despesa', {ascending: false}).order('id', {ascending: false}).limit(20).then(ok);
   $('#gs').innerHTML = l.length ? l.map(d => `<div class="row2"><div class="who"><b>${esc(d.descricao)}</b><small>${esc(CATS[d.categoria] || d.categoria)}, ${dataBR(d.data_despesa)}</small></div><b>${brl(d.valor)}</b></div>`).join('') : vazio('Nenhum gasto lançado ainda.');
 }
- 
+
 // ---------- Navegação e eventos ----------
 function aba(nome) {
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === nome)));
@@ -324,7 +325,7 @@ $('#chm').addEventListener('click', e => {
     setTimeout(() => { seguro(atrasados); seguro(resultado); }, 600);
   });
 });
- 
+
 // Novo atendimento
 function totalAt() {
   const s = SERV.find(x => String(x.id) === $('#at-s').value), d = Math.min(Math.max(Number($('#at-d').value) || 0, 0), s ? Number(s.preco) : 0);
@@ -344,7 +345,7 @@ $('#fAt').addEventListener('submit', async e => {
     $('#dAt').close(); $('#fAt').reset(); toast('Atendimento salvo.'); tudoDoPainel();
   } catch (x) { $('#at-err').textContent = x.message; }
 });
- 
+
 // Agenda
 $('#dia').addEventListener('change', e => { DIA = e.target.value || hojeISO(); seguro(agenda); });
 $('#dia-ant').addEventListener('click', () => { DIA = maisDia(DIA, -1); seguro(agenda); });
@@ -376,7 +377,7 @@ $('#fCon').addEventListener('submit', async e => {
     $('#dCon').close(); toast('Atendimento concluído.'); seguro(agenda); tudoDoPainel();
   } catch (x) { $('#co-err').textContent = x.message; }
 });
- 
+
 // Serviços
 $('#fSv').addEventListener('submit', e => {
   e.preventDefault();
@@ -396,7 +397,7 @@ $('#sv').addEventListener('click', e => {
     await servicos();
   });
 });
- 
+
 // Gastos
 $('#gs-c').innerHTML = opcoes(CATS); $('#gs-dt').value = hojeISO();
 $('#fGs').addEventListener('submit', e => {
@@ -406,7 +407,7 @@ $('#fGs').addEventListener('submit', e => {
     $('#fGs').reset(); $('#gs-dt').value = hojeISO(); toast('Gasto salvo.'); await gastos(); seguro(painel);
   });
 });
- 
+
 // Configurar barbearia
 function reduzir(arquivo) {
   return new Promise((res, rej) => {
@@ -439,7 +440,7 @@ $('#fCfg').addEventListener('submit', async e => {
     INFO = {...INFO, ...b}; $('#dCfg').close(); marca(); toast('Configuração salva.');
   } catch (x) { $('#cf-err').textContent = x.message; }
 });
- 
+
 // ======================= ADMINISTRAÇÃO (só acesso e cobrança) =======================
 let LISTA = [], MENSAGEM = '';
 const dinheiro = () => Number($('#val').value) || 0;
@@ -504,7 +505,7 @@ $('#fNova').addEventListener('submit', async e => {
 });
 $('#cred-copiar').addEventListener('click', async () => { try { await navigator.clipboard.writeText(MENSAGEM); toast('Mensagem copiada.'); } catch (er) { toast('Não foi possível copiar.', true); } });
 $('#a-sair').addEventListener('click', sair);
- 
+
 // ======================= PÁGINA INICIAL =======================
 document.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => tela(b.dataset.ir === 'login' ? 'tela-login' : 'tela-inicio')));
 document.querySelectorAll('[data-privacidade]').forEach(b => b.addEventListener('click', () => $('#dPrivacidade').showModal()));
@@ -522,7 +523,7 @@ document.querySelectorAll('[data-privacidade]').forEach(b => b.addEventListener(
   document.querySelectorAll('.pv-email').forEach(e => e.textContent = mail ? EMAIL_CONTATO : 'o contato indicado no rodapé do site');
   if (mail) { $('#lp-email').textContent = EMAIL_CONTATO; $('#lp-email').href = 'mailto:' + EMAIL_CONTATO; }
 })();
- 
+
 // ======================= INÍCIO =======================
 (function inicio() {
   const conv = new URLSearchParams(location.search).get('convite');
@@ -530,4 +531,3 @@ document.querySelectorAll('[data-privacidade]').forEach(b => b.addEventListener(
   entrar().then(() => { if (conv && !$('#tela-inicio').hidden) tela('tela-login'); })
     .catch(e => { tela('tela-inicio'); toast(e.message, true); });
 })();
- 

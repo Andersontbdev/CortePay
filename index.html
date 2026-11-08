@@ -3,48 +3,69 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CortePay</title>
-<meta name="theme-color" content="#0E1A2B">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icones/favicon-64.png">
-<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="CortePay">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=9">
-<meta name="color-scheme" content="only light">
+<title>Sistema para barbearias</title>
+<meta name="description" content="Sistema simples para barbearias: agenda, clientes, serviços, ganhos e gastos no celular, com teste grátis.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#16202E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=DM+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></symbol>
-  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-4"/><path d="M12 16V8"/><path d="M16 16v-6"/></symbol>
-  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></symbol>
-  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5"/><path d="M18 9.5v5"/></symbol>
-  <symbol id="i-crown" viewBox="0 0 24 24"><path d="M4 18h16"/><path d="M4 18 3 8l5 4 4-6 4 6 5-4-1 10"/></symbol>
-  <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.6"/><circle cx="6" cy="17" r="2.6"/><path d="M8.2 8.4 20 17"/><path d="M8.2 15.6 20 7"/></symbol>
-  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M15.5 4.9a3.2 3.2 0 0 1 0 6.2"/><path d="M17.5 14.6c1.8.6 3 2.3 3.4 4.9"/></symbol>
-  <symbol id="i-box" viewBox="0 0 24 24"><path d="m3.5 7.5 8.5-4 8.5 4v9l-8.5 4-8.5-4z"/><path d="m3.5 7.5 8.5 4 8.5-4"/><path d="M12 11.5v9"/></symbol>
-  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6"/><path d="M9 12h6"/></symbol>
-  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></symbol>
-  <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></symbol>
-  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
-  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
-  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
-  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></symbol>
-  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></symbol>
-  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
-  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-2.9 3.6"/><path d="M6.6 6.7A15.6 15.6 0 0 0 2.5 12S6 18.5 12 18.5a9.3 9.3 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
-  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></symbol>
-  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/><circle cx="9.5" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></symbol>
-  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
-  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></symbol>
-  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
-</svg>
 <div class="pole" aria-hidden="true"></div>
+<div id="tela-inicio">
+  <header class="lp-topo">
+    <strong id="lp-nome">Sistema para barbearias</strong>
+    <div class="acts">
+      <button class="btn sec sm" type="button" data-privacidade>Privacidade</button>
+      <button class="btn sm" type="button" data-ir="login">Entrar</button>
+    </div>
+  </header>
+  <main class="lp">
+    <section class="lp-hero">
+      <h1>Sua barbearia organizada, direto do celular</h1>
+      <p class="lp-lead">Agenda, clientes, serviços, ganhos e gastos num só lugar. Feito para barbearias pequenas, simples de usar no dia a dia.</p>
+      <div class="acts">
+        <a class="btn" id="lp-wa" target="_blank" rel="noopener" hidden>Falar no WhatsApp</a>
+        <button class="btn sec" type="button" data-ir="login">Já sou cliente: entrar</button>
+      </div>
+      <p class="sub" id="lp-oferta"></p>
+    </section>
+
+    <section class="lp-sec">
+      <h2>O que o sistema faz</h2>
+      <div class="lp-grade">
+        <article class="card"><h3>Agenda</h3><p>Horários livres calculados sozinhos, sem marcar duas pessoas no mesmo horário, e confirmação do horário pelo WhatsApp.</p></article>
+        <article class="card"><h3>Clientes</h3><p>Cadastro pelo telefone e histórico de visitas. O sistema mostra quem está sumido e ajuda a chamar de volta.</p></article>
+        <article class="card"><h3>Ganhos e gastos</h3><p>Lucro do dia, da semana e do mês, formas de pagamento e para onde o dinheiro está indo.</p></article>
+        <article class="card"><h3>Serviços e preços</h3><p>Cadastre cada serviço com preço e duração. Reajustar o preço não mexe no que já foi cobrado.</p></article>
+        <article class="card"><h3>Descontos</h3><p>Lance o desconto na hora do atendimento e o sistema calcula o total.</p></article>
+        <article class="card"><h3>Sua marca</h3><p>Nome e logotipo da sua barbearia em todas as telas.</p></article>
+      </div>
+    </section>
+
+    <section class="lp-sec">
+      <h2>Como começar</h2>
+      <ol class="lp-passos">
+        <li><strong>Fale com a gente.</strong> Chame pelo WhatsApp ou e-mail e conte sobre a sua barbearia.</li>
+        <li><strong>Receba o seu convite.</strong> Você recebe um código, cria a sua conta e já pode entrar.</li>
+        <li><strong>Cadastre os serviços e comece a lançar.</strong> Os primeiros dias já mostram o painel funcionando.</li>
+      </ol>
+    </section>
+
+    <section class="lp-sec">
+      <h2>Seus dados e os dos seus clientes</h2>
+      <p>Cada barbearia só enxerga os próprios dados. Pelo sistema, a administração vê apenas o acesso e a cobrança, nunca clientes, agenda ou gastos. Saiba mais na <button class="link" type="button" data-privacidade>Política de Privacidade</button>.</p>
+    </section>
+  </main>
+  <footer class="lp-rodape">
+    <span>&copy; <span id="lp-ano"></span> <span class="pv-nome"></span></span>
+    <span id="lp-contato" hidden>Contato: <a id="lp-email"></a></span>
+    <button class="link" type="button" data-privacidade>Política de Privacidade</button>
+  </footer>
+</div>
+
 <main id="tela-login" class="card login-card" hidden>
+  <button class="link" type="button" data-ir="inicio">&larr; Voltar</button>
   <h1>Bem-vindo</h1>
   <p class="sub" style="margin-bottom:16px">Sistema para barbearias.</p>
   <div class="seg" role="group" aria-label="Entrar ou criar conta">
@@ -79,143 +100,57 @@
   </form>
 </main>
 
-<main id="tela-publico" class="public-booking" hidden>
-  <section class="card public-booking-card">
-    <div class="public-brand"><img id="pub-logo" alt="Logotipo da barbearia" hidden><div><p class="eyebrow">Agendamento online</p><h1 id="pub-nome">Barbearia</h1><p class="sub" id="pub-horario"></p></div></div>
-    <p class="sub">Escolha o serviço, selecione um dia e horário disponível e confirme seu agendamento.</p>
-    <form id="form-publico-agendamento">
-      <label class="lab" for="pub-servico">Serviço</label><select id="pub-servico" class="f" required><option value="">Carregando serviços...</option></select>
-      <div id="pub-barbeiro-box" hidden><label class="lab" for="pub-barbeiro">Barbeiro</label><select id="pub-barbeiro" class="f"></select></div>
-      <label class="lab" for="pub-data">Data</label><input id="pub-data" class="f" type="date" required>
-      <label class="lab" for="pub-hora">Horário disponível</label><select id="pub-hora" class="f" required><option value="">Selecione um serviço e uma data</option></select>
-      <label class="lab" for="pub-cliente">Seu nome</label><input id="pub-cliente" class="f" autocomplete="name" maxlength="120" required>
-      <label class="lab" for="pub-telefone">WhatsApp com DDD</label><input id="pub-telefone" class="f" type="tel" autocomplete="tel" placeholder="(11) 91234-5678" required>
-      <label class="lab" for="pub-nasc">Data de nascimento (opcional, para lembrarmos do seu aniversário)</label><input id="pub-nasc" class="f" type="date" autocomplete="bday">
-      <div id="pub-resumo" class="public-summary" hidden></div>
-      <p class="err" id="pub-erro" role="alert"></p>
-      <button class="btn" id="pub-confirmar" style="width:100%">Confirmar agendamento</button>
-    </form>
-    <div id="pub-sucesso" class="public-summary" hidden>
-      <p class="success-message" style="margin:0 0 6px">Agendamento confirmado!</p>
-      <p class="sub" id="pub-sucesso-txt" style="margin:0"></p>
-    </div>
-    <p class="lab public-foot">Seu horário só estará reservado após a confirmação nesta tela.</p>
-  </section>
-</main>
-
-<div id="tela-app" class="app" hidden>
-<aside class="side" id="side" aria-label="Menu principal">
-  <div class="side-top">
-    <div class="brand">
-      <img id="logo" alt="Logotipo" hidden><span id="ini" class="ini" aria-hidden="true"></span>
-      <div class="brand-txt"><b id="bn"></b><small>CortePay</small></div>
-    </div>
-    <button class="icon-btn side-fechar" id="menu-fechar" type="button" aria-label="Fechar menu"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+<div id="tela-app" hidden>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <img id="logo" alt="Logotipo" hidden><span id="ini" class="ini" aria-hidden="true"></span>
+    <div><h1 id="bn"></h1><p class="sub" id="sub"></p></div>
   </div>
-  <nav class="nav" id="tabs" aria-label="Seções">
-    <p class="nav-grupo">Visão geral</p>
-    <button type="button" data-t="painel" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span>Início</span></button>
-    <button type="button" data-t="relatorios" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg><span>Relatórios</span></button>
-    <p class="nav-grupo">Dia a dia</p>
-    <button type="button" data-t="agenda" id="tab-ag" aria-pressed="false" hidden><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg><span>Agenda</span></button>
-    <button type="button" data-t="caixa" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-cash"/></svg><span>Caixa</span></button>
-    <button type="button" data-t="clube" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-crown"/></svg><span>Clube</span></button>
-    <p class="nav-grupo">Cadastros</p>
-    <button type="button" data-t="servicos" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-scissors"/></svg><span>Serviços</span></button>
-    <button type="button" data-t="barbeiros" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg><span>Barbeiros</span></button>
-    <button type="button" data-t="estoque" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-box"/></svg><span>Estoque</span></button>
-    <p class="nav-grupo">Financeiro</p>
-    <button type="button" data-t="gastos" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-receipt"/></svg><span>Gastos</span></button>
-  </nav>
-  <div class="side-foot">
-    <button class="side-link destaque" id="instalar" type="button" hidden><svg class="i" aria-hidden="true"><use href="#i-down"/></svg><span>Instalar o app</span></button>
-    <button class="side-link" id="tema-toggle" type="button" aria-pressed="false" aria-label="Ativar modo escuro"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg><span>Modo escuro</span></button>
-    <button class="side-link" id="cfg" type="button"><svg class="i" aria-hidden="true"><use href="#i-gear"/></svg><span>Configurar</span></button>
-    <small class="versao">CortePay · versão 9</small>
-    <button class="side-link" id="sair" type="button"><svg class="i" aria-hidden="true"><use href="#i-out"/></svg><span>Sair</span></button>
-  </div>
-</aside>
-<div class="scrim" id="scrim" hidden></div>
-<div class="main">
-<header class="topbar">
-  <button class="icon-btn menu-abrir" id="menu-abrir" type="button" aria-label="Abrir menu" aria-controls="side"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
-  <div class="topbar-tit"><h1 id="page-title">Início</h1><p class="sub" id="sub"></p></div>
   <div class="seg" id="per" role="group" aria-label="Período">
-    <button type="button" aria-pressed="false" data-p="hoje">Hoje</button>
-    <button type="button" aria-pressed="true" data-p="semana">Semana</button>
-    <button type="button" aria-pressed="false" data-p="mes">Mês</button>
+    <button aria-pressed="false" data-p="hoje">Hoje</button>
+    <button aria-pressed="true" data-p="semana">Semana</button>
+    <button aria-pressed="false" data-p="mes">Mês</button>
   </div>
-  <button class="btn" id="novo" type="button"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg><span>Novo atendimento</span></button>
+  <div class="acts">
+    <button class="btn sec sm" id="cfg" type="button">Configurar</button>
+    <button class="btn sec sm" id="sair" type="button">Sair</button>
+  </div>
 </header>
 <div class="ban" id="ban" hidden></div>
+<nav class="tabs" id="tabs" aria-label="Seções">
+  <button data-t="painel" aria-pressed="true">Painel</button>
+  <button data-t="agenda" id="tab-ag" aria-pressed="false" hidden>Agenda</button>
+  <button data-t="servicos" aria-pressed="false">Serviços</button>
+  <button data-t="gastos" aria-pressed="false">Gastos</button>
+</nav>
 
-<main class="content">
+<main>
 <section id="v-painel" class="grid">
-<section class="saldo gate sensivel" aria-label="Resultado do período">
-    <div class="saldo-topo">
-      <span class="saldo-rot" id="saldo-rot">Lucro da semana</span>
-      <button class="icon-btn" id="olho" type="button" aria-pressed="false" aria-label="Esconder valores"><svg class="i" aria-hidden="true"><use href="#i-eye"/></svg></button>
-    </div>
-    <p class="num saldo-valor" id="luc">-</p>
-    <div class="saldo-linha">
-      <div><span>Entrou</span><b class="num" id="in">-</b></div>
-      <div><span>Gastos</span><b class="num" id="out">-</b></div>
-      <div><span>Atendimentos</span><b class="num" id="qt">-</b></div>
-      <div><span>Produtos</span><b class="num" id="pv">-</b></div>
-      <div><span>Clube</span><b class="num" id="cv">-</b></div>
+  <section class="card hero gate" aria-label="Lucro">
+    <p class="lab">Lucro</p><p class="num big ok" id="luc">-</p>
+    <div class="mini">
+      <div><p class="lab">Entrou</p><p class="num" id="in">-</p></div>
+      <div><p class="lab">Gastos</p><p class="num" id="out">-</p></div>
+      <div><p class="lab">Atendimentos</p><p class="num" id="qt">-</p></div>
     </div>
     <div class="bars" id="bars" role="img" aria-label="Entradas por período"></div><div class="ticks" id="ticks"></div>
   </section>
-  <div class="atalhos" aria-label="Atalhos">
-    <button class="atalho principal" type="button" data-atalho="atendimento"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></span>Atendimento</button>
-    <button class="atalho" type="button" data-atalho="horario" id="atalho-horario" hidden><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg></span>Marcar horário</button>
-    <button class="atalho" type="button" data-atalho="vender"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-cart"/></svg></span>Vender produto</button>
-    <button class="atalho" type="button" data-atalho="caixa"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-cash"/></svg></span>Caixa</button>
-    <button class="atalho" type="button" data-atalho="clube"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-crown"/></svg></span>Clube</button>
-    <button class="atalho" type="button" data-atalho="gasto"><span class="bola"><svg class="i" aria-hidden="true"><use href="#i-receipt"/></svg></span>Lançar gasto</button>
-  </div>
-
-  <section id="card-estoque-baixo" class="card full alerta-card" hidden>
-    <h2>Estoque baixo</h2>
-    <div id="estoque-baixo"></div>
-  </section>
-  <section class="card full" id="card-chamar">
-    <div class="titulo-linha">
-      <h2>Clientes para chamar <span class="chip red" id="chm-qtd" hidden></span></h2>
-      <div class="acts"><label class="lab" for="ret-dias">Avisar com</label><input id="ret-dias" class="f f-auto" type="number" min="0" max="180" step="1" value="20" style="width:76px"><span class="lab">dias além do ritmo</span></div>
-    </div>
-    <p class="sub" style="margin:-4px 0 12px">O sistema aprende de quanto em quanto tempo cada cliente costuma vir (a partir de 3 visitas). Quando ele passa do ritmo pelo número de dias escolhido, aparece aqui para você chamar com uma promoção.</p>
-    <details class="opcional"><summary>Promoção e mensagem</summary>
-      <label class="lab" for="promo">Promoção (você define na hora)</label>
-      <input id="promo" class="f" type="text" placeholder="Ex.: 10% de desconto no corte">
-      <label class="lab" for="tpl">Mensagem ({nome}: cliente, {barbearia}: sua barbearia, {promocao}: a promoção acima)</label>
-      <textarea id="tpl" class="f" rows="2">Oi, {nome}! Sentimos sua falta aqui na {barbearia}. Esta semana tem {promocao} para você. Vamos marcar?</textarea>
-    </details>
+  <section class="card k gate" aria-label="Formas de pagamento"><h2>Como pagaram</h2><div id="pag"></div></section>
+  <section class="card half"><h2>Clientes mais frequentes</h2><div id="rank"></div></section>
+  <section class="card half gate" aria-label="Últimos atendimentos"><h2>Últimos atendimentos</h2><div id="ult"></div></section>
+  <section class="card hero gate" aria-label="Ranking de gastos"><h2>Para onde foi o dinheiro</h2><div id="gst"></div></section>
+  <section class="card k gate" aria-label="Indicadores"><h2>Indicadores</h2><div id="kpi"></div></section>
+  <section class="card full">
+    <h2>Clientes para chamar</h2>
+    <p class="sub" style="margin:-8px 0 12px">Clientes que estão demorando mais do que o normal para voltar.</p>
+    <label class="lab" for="promo">Promoção (você define na hora)</label>
+    <input id="promo" class="f" type="text" placeholder="Ex.: 10% de desconto no corte">
+    <label class="lab" for="tpl">Mensagem ({nome}: cliente, {barbearia}: sua barbearia, {promocao}: a promoção acima)</label>
+    <textarea id="tpl" class="f" rows="2">Oi, {nome}! Sentimos sua falta aqui na {barbearia}. Esta semana tem {promocao} para você. Vamos marcar?</textarea>
     <div id="chm"></div>
   </section>
-  <section id="card-lembretes" class="card half" hidden>
-    <h2>Lembrar os horários de amanhã</h2>
-    <p class="sub" style="margin:-8px 0 10px">Um toque abre o WhatsApp com a mensagem pronta. Lembrar no dia anterior diminui as faltas.</p>
-    <div id="lembretes"></div>
-  </section>
-  <section id="card-aniver" class="card half">
-    <h2>Aniversariantes da semana</h2>
-    <details class="opcional"><summary>Editar mensagem</summary>
-      <label class="lab" for="tpl-aniv">Mensagem ({nome}: cliente, {barbearia}: sua barbearia)</label>
-      <textarea id="tpl-aniv" class="f" rows="2">Feliz aniversário, {nome}! 🎉 A {barbearia} deseja um ano incrível. Passe aqui esta semana que temos um presente para você!</textarea>
-    </details>
-    <div id="aniver"></div>
-  </section>
-  
-  
-  
-  <section class="card hero gate sensivel" aria-label="Últimos atendimentos"><h2>Últimos atendimentos</h2><div id="ult"></div></section>
-  <section class="card k gate sensivel" aria-label="Formas de pagamento"><h2>Como pagaram</h2><div id="pag"></div></section>
-  <section class="card hero gate sensivel" aria-label="Ranking de gastos"><h2>Para onde foi o dinheiro</h2><div id="gst"></div></section>
-  <section class="card k gate sensivel" aria-label="Indicadores"><h2>Indicadores</h2><div id="kpi"></div></section>
-  <section class="card full"><h2>Clientes mais frequentes</h2><div id="rank"></div></section>
-
-  <section class="card full gate" id="card-resultado" aria-label="Resultado das mensagens">
+  <section class="card full gate" aria-label="Resultado das mensagens">
     <h2>A função de chamar está funcionando?</h2>
     <div class="mini" id="rs"></div><p id="vd" style="margin:0 0 16px"></p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px">
@@ -223,50 +158,6 @@
       <div><h2 style="font-size:15px">Últimas mensagens</h2><div id="ms"></div></div>
     </div>
   </section>
-  <section id="card-link-agendamento" class="card full booking-link-card" hidden>
-    <h2>Link de agendamento online</h2>
-    <p class="sub">Compartilhe este link com seus clientes para que escolham o serviço e reservem um horário disponíveis, sem precisar falar com você antes.</p>
-    <div class="booking-link-row"><input id="link-agendamento" class="f" readonly aria-label="Link público de agendamento"><button class="btn" type="button" id="copiar-link-agendamento">Copiar link</button><a class="btn sec" id="abrir-link-agendamento" target="_blank" rel="noopener">Visualizar</a></div>
-    <p class="lab" style="margin-bottom:0">Este bloco só aparece quando a opção “Trabalho com agendamento de horários” estiver ativada nas configurações.</p>
-  </section>
-</section>
-
-<section id="v-relatorios" hidden>
-  <div class="filtros">
-    <div class="seg" id="rel-rapido" role="group" aria-label="Período rápido">
-      <button type="button" data-r="7" aria-pressed="false">7 dias</button>
-      <button type="button" data-r="30" aria-pressed="false">30 dias</button>
-      <button type="button" data-r="mes" aria-pressed="true">Este mês</button>
-      <button type="button" data-r="passado" aria-pressed="false">Mês passado</button>
-    </div>
-    <div class="acts">
-      <label class="lab" for="rel-de">De</label><input id="rel-de" type="date" class="f f-auto">
-      <label class="lab" for="rel-ate">até</label><input id="rel-ate" type="date" class="f f-auto">
-    </div>
-  </div>
-  <div class="gate sensivel" id="rel-corpo" aria-label="Relatórios">
-    <div class="kpis" id="rel-kpis"></div>
-    <div class="grid">
-      <section class="card full"><h2>Entradas por dia</h2><div id="rel-diario" class="grafico"></div></section>
-      <section class="card half"><h2>Por barbeiro</h2><div id="rel-barb"></div></section>
-      <section class="card half"><h2>Horários de pico</h2><p class="sub" style="margin:-8px 0 12px">Atendimentos por dia da semana e hora.</p><div id="rel-pico"></div></section>
-      <section class="card half"><h2>Serviços mais feitos</h2><div id="rel-serv"></div></section>
-      <section class="card half"><h2>Produtos mais vendidos</h2><div id="rel-prod"></div></section>
-      <section class="card half"><h2>Faltas na agenda</h2><div id="rel-faltas"></div></section>
-      <section class="card half"><h2>Como pagaram</h2><div id="rel-formas"></div></section>
-    </div>
-  </div>
-</section>
-
-<section id="v-pro" hidden>
-  <div class="card upgrade">
-    <span class="selo"><svg class="i" aria-hidden="true"><use href="#i-crown"/></svg></span>
-    <h2 id="pro-tit">Recurso do plano Pro</h2>
-    <p class="sub" id="pro-desc"></p>
-    <ul class="lista-pro" id="pro-lista"></ul>
-    <p class="preco" id="pro-preco"></p>
-    <div class="acts" style="justify-content:center"><a class="btn" id="pro-quero" target="_blank" rel="noopener">Quero o Pro</a><button class="btn sec" type="button" id="pro-voltar">Voltar ao início</button></div>
-  </div>
 </section>
 
 <section id="v-agenda" hidden>
@@ -274,8 +165,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
       <div class="acts"><button class="btn sec sm" id="dia-ant" aria-label="Dia anterior">&lt;</button>
         <input id="dia" type="date" class="f" style="width:auto;margin:0">
-        <button class="btn sec sm" id="dia-prox" aria-label="Próximo dia">&gt;</button>
-        <select id="ag-filtro" class="f" style="width:auto;margin:0" aria-label="Filtrar por barbeiro" hidden></select></div>
+        <button class="btn sec sm" id="dia-prox" aria-label="Próximo dia">&gt;</button></div>
       <button class="btn sm" id="novo-ag">Novo horário</button>
     </div>
     <div id="ag"></div>
@@ -296,89 +186,6 @@
   </div>
 </section>
 
-<section id="v-caixa" hidden>
-  <div class="card gate sensivel" style="margin-bottom:14px" aria-label="Caixa do dia">
-    <h2>Caixa do dia</h2>
-    <div id="cx"></div>
-  </div>
-  <div class="card gate" aria-label="Caixas anteriores">
-    <h2>Caixas anteriores</h2>
-    <div id="cx-hist"></div>
-  </div>
-</section>
-
-<section id="v-clube" hidden>
-  <div class="card" style="margin-bottom:14px">
-    <div class="titulo-linha">
-      <h2>Assinantes do clube</h2>
-      <button class="btn sm" id="novo-assinante" type="button">Novo assinante</button>
-    </div>
-    <div class="mini gate" id="clube-resumo" aria-label="Resumo do clube"></div>
-    <div id="assinantes"></div>
-  </div>
-  <div class="card" style="margin-bottom:14px">
-    <div class="titulo-linha">
-      <h2>Planos</h2>
-      <button class="btn sec sm" id="novo-plano" type="button">Novo plano</button>
-    </div>
-    <p class="lab" style="margin-bottom:12px">O cliente paga um valor fixo por mês e usa os serviços do plano sem pagar na hora. "Usos por mês" em branco quer dizer ilimitado. A comissão do barbeiro, nesses atendimentos, é calculada sobre o preço normal do serviço.</p>
-    <div id="planos"></div>
-  </div>
-  <div class="card gate" aria-label="Mensalidades recebidas">
-    <h2>Mensalidades recebidas</h2>
-    <div id="clube-pags"></div>
-  </div>
-</section>
-
-<section id="v-barbeiros" hidden>
-  <div class="card" style="margin-bottom:14px">
-    <h2>Barbeiros</h2>
-    <form id="fBb" class="cols cols-campos">
-      <div><label class="lab" for="bb-n">Nome</label><input class="f" id="bb-n" maxlength="80" required></div>
-      <div><label class="lab" for="bb-t">WhatsApp (opcional)</label><input class="f" id="bb-t" type="tel" maxlength="20"></div>
-      <div><label class="lab" for="bb-cs">% nos serviços</label><input class="f" id="bb-cs" type="number" min="0" max="100" step="0.5" value="40" required></div>
-      <div><label class="lab" for="bb-cp">% nos produtos</label><input class="f" id="bb-cp" type="number" min="0" max="100" step="0.5" value="10" required></div>
-      <div class="cols-botao"><button class="btn">Adicionar</button></div>
-    </form>
-    <p class="lab" style="margin-bottom:12px">Com barbeiros cadastrados, cada atendimento e cada horário da agenda passam a ter um barbeiro, e a comissão é calculada sozinha sobre o valor cobrado.</p>
-    <div id="bb"></div>
-  </div>
-  <div class="card gate" aria-label="Comissões">
-    <div class="titulo-linha">
-      <h2>Comissões</h2>
-      <div class="acts">
-        <label class="lab" for="cm-de">De</label><input id="cm-de" type="date" class="f f-auto">
-        <label class="lab" for="cm-ate">até</label><input id="cm-ate" type="date" class="f f-auto">
-      </div>
-    </div>
-    <div id="cm"></div>
-    <p class="lab" style="margin-top:10px">Vales e pagamentos entram automaticamente nos gastos, na categoria "Comissões e vales". O saldo a receber considera todo o histórico, não só o período.</p>
-  </div>
-</section>
-
-<section id="v-estoque" hidden>
-  <div class="card" style="margin-bottom:14px">
-    <div class="titulo-linha">
-      <h2>Produtos e estoque</h2>
-      <button class="btn sm" id="nova-venda" type="button">Vender produto</button>
-    </div>
-    <form id="fPr" class="cols cols-campos">
-      <div><label class="lab" for="pr-n">Produto</label><input class="f" id="pr-n" maxlength="100" required placeholder="Ex.: Pomada modeladora"></div>
-      <div><label class="lab" for="pr-tp">Tipo</label><select class="f" id="pr-tp"></select></div>
-      <div><label class="lab" for="pr-c">Custo (R$)</label><input class="f" id="pr-c" type="number" min="0" step="0.01" value="0"></div>
-      <div><label class="lab" for="pr-p">Preço de venda (R$)</label><input class="f" id="pr-p" type="number" min="0" step="0.01" value="0"></div>
-      <div><label class="lab" for="pr-m">Avisar com</label><input class="f" id="pr-m" type="number" min="0" step="1" value="2" title="Estoque mínimo"></div>
-      <div class="cols-botao"><button class="btn">Adicionar</button></div>
-    </form>
-    <p class="lab" style="margin-bottom:12px">O estoque começa em zero: use "Entrada" para lançar o que você tem ou comprou. Produtos de "uso interno" (lâminas, toalhas, álcool...) não aparecem para venda. "Avisar com" é a quantidade mínima: abaixo dela o produto aparece no painel.</p>
-    <div id="pr"></div>
-  </div>
-  <div class="card gate" aria-label="Últimas vendas de produtos">
-    <h2>Últimas vendas de produtos</h2>
-    <div id="vd-lista"></div>
-  </div>
-</section>
-
 <section id="v-gastos" hidden>
   <div class="card">
     <h2>Lançar gasto</h2>
@@ -395,32 +202,14 @@
 </main>
 </div>
 
-<nav class="bottom-nav" id="bottom-nav" aria-label="Atalhos de navegação">
-  <button type="button" data-t="painel" aria-pressed="true"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span>Início</span></button>
-  <button type="button" data-t="agenda" id="bn-ag" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-cal"/></svg><span>Agenda</span></button>
-  <span aria-hidden="true"></span>
-  <button type="button" data-t="caixa" id="bn-cx" aria-pressed="false"><svg class="i" aria-hidden="true"><use href="#i-cash"/></svg><span>Caixa</span></button>
-  <button type="button" id="bn-mais" aria-pressed="false" aria-controls="side"><svg class="i" aria-hidden="true"><use href="#i-dots"/></svg><span>Mais</span></button>
-</nav>
-<div id="tip" role="tooltip" hidden></div>
+<button class="fab" id="novo" type="button">Novo atendimento</button>
 <dialog id="dAt"><h2>Novo atendimento</h2>
 <form id="fAt">
-  <label class="lab" for="at-cliente-existente">Cliente cadastrado</label>
-  <select id="at-cliente-existente" class="f">
-    <option value="">Novo cliente — preencher os dados abaixo</option>
-  </select>
-  <p class="lab" id="at-cliente-ajuda">Selecione um cliente salvo para preencher nome e telefone automaticamente.</p>
-  <label class="lab" for="at-n">Nome do cliente</label><input id="at-n" class="f" autocomplete="name" required>
-  <label class="lab" for="at-t">Telefone (com DDD)</label><input id="at-t" class="f" type="tel" autocomplete="tel" placeholder="(11) 91234-5678" required>
+  <label class="lab" for="at-n">Cliente</label><input id="at-n" class="f" required>
+  <label class="lab" for="at-t">Telefone (com DDD)</label><input id="at-t" class="f" type="tel" placeholder="(11) 91234-5678" required>
   <label class="lab" for="at-s">Serviço</label><select id="at-s" class="f"></select>
-  <div class="so-barbeiros" hidden><label class="lab" for="at-b">Barbeiro</label><select id="at-b" class="f"></select></div>
-  <div class="benef" id="at-benef" hidden></div>
-  <div class="itens" data-itens="at"></div>
   <label class="lab" for="at-f">Pagamento</label><select id="at-f" class="f"></select>
-  <label class="lab" for="at-d">Desconto no serviço (R$)</label><input id="at-d" class="f" type="number" min="0" step="0.01" value="0">
-  <details class="opcional" id="at-nasc-box"><summary>Aniversário do cliente (opcional)</summary>
-    <label class="lab" for="at-nasc">Data de nascimento</label><input id="at-nasc" class="f" type="date">
-  </details>
+  <label class="lab" for="at-d">Desconto (R$)</label><input id="at-d" class="f" type="number" min="0" step="0.01" value="0">
   <div class="kp"><span class="lab">Total a cobrar</span><span class="num" id="at-tot">R$ 0,00</span></div>
   <p class="err" id="at-err" role="alert"></p>
   <div class="acts"><button class="btn">Salvar atendimento</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
@@ -431,7 +220,6 @@
   <label class="lab" for="ag-n">Cliente</label><input id="ag-n" class="f" required>
   <label class="lab" for="ag-t">Telefone (com DDD)</label><input id="ag-t" class="f" type="tel" required>
   <label class="lab" for="ag-s">Serviço</label><select id="ag-s" class="f"></select>
-  <div class="so-barbeiros" hidden><label class="lab" for="ag-b">Barbeiro</label><select id="ag-b" class="f"></select></div>
   <label class="lab" for="ag-dt">Dia</label><input id="ag-dt" class="f" type="date" required>
   <label class="lab" for="ag-h">Horários livres</label><select id="ag-h" class="f"></select>
   <p class="err" id="ag-err" role="alert"></p>
@@ -440,131 +228,10 @@
 
 <dialog id="dCon"><h2>Concluir atendimento</h2>
 <form id="fCon">
-  <p class="sub" id="co-info" style="margin-bottom:12px"></p>
-  <div class="so-barbeiros" hidden><label class="lab" for="co-b">Barbeiro</label><select id="co-b" class="f"></select></div>
-  <div class="benef" id="co-benef" hidden></div>
-  <div class="itens" data-itens="co"></div>
   <label class="lab" for="co-f">Pagamento</label><select id="co-f" class="f"></select>
-  <label class="lab" for="co-d">Desconto no serviço (R$)</label><input id="co-d" class="f" type="number" min="0" step="0.01" value="0">
-  <div class="kp"><span class="lab">Total a cobrar</span><span class="num" id="co-tot">R$ 0,00</span></div>
+  <label class="lab" for="co-d">Desconto (R$)</label><input id="co-d" class="f" type="number" min="0" step="0.01" value="0">
   <p class="err" id="co-err" role="alert"></p>
   <div class="acts"><button class="btn">Concluir</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dBbCom"><h2 id="bbc-tit">Comissão por serviço</h2>
-<form id="fBbCom">
-  <p class="lab" style="margin-bottom:12px">Deixe em branco para usar a % padrão do barbeiro. Preencha só os serviços com % diferente.</p>
-  <div id="bbc-lista"></div>
-  <p class="err" id="bbc-err" role="alert"></p>
-  <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dBbLanc"><h2 id="bbl-tit">Vale</h2>
-<form id="fBbLanc">
-  <p class="sub" id="bbl-info" style="margin-bottom:12px"></p>
-  <label class="lab" for="bbl-v">Valor (R$)</label><input id="bbl-v" class="f" type="number" min="0.01" step="0.01" required>
-  <label class="lab" for="bbl-d">Observação (opcional)</label><input id="bbl-d" class="f" maxlength="150">
-  <p class="lab">Esse valor também entra nos gastos, como "Comissões e vales".</p>
-  <p class="err" id="bbl-err" role="alert"></p>
-  <div class="acts"><button class="btn">Confirmar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dProd"><h2>Editar produto</h2>
-<form id="fProd">
-  <label class="lab" for="pd-n">Produto</label><input id="pd-n" class="f" maxlength="100" required>
-  <label class="lab" for="pd-tp">Tipo</label><select id="pd-tp" class="f"></select>
-  <div class="cols">
-    <div><label class="lab" for="pd-c">Custo (R$)</label><input id="pd-c" class="f" type="number" min="0" step="0.01" required></div>
-    <div><label class="lab" for="pd-p">Preço de venda (R$)</label><input id="pd-p" class="f" type="number" min="0" step="0.01" required></div>
-    <div><label class="lab" for="pd-m">Avisar com</label><input id="pd-m" class="f" type="number" min="0" step="1" required></div>
-  </div>
-  <label style="display:flex;gap:8px;align-items:center;margin:0 0 12px"><input id="pd-a" type="checkbox"> Produto ativo</label>
-  <p class="err" id="pd-err" role="alert"></p>
-  <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dMov"><h2 id="mv-tit">Movimentar estoque</h2>
-<form id="fMov">
-  <p class="sub" id="mv-info" style="margin-bottom:12px"></p>
-  <label class="lab" for="mv-t">Tipo</label>
-  <select id="mv-t" class="f">
-    <option value="ENTRADA">Entrada (compra ou reposição)</option>
-    <option value="CONSUMO">Uso interno (saída)</option>
-    <option value="AJUSTE">Ajuste (corrigir pela contagem)</option>
-  </select>
-  <label class="lab" for="mv-q" id="mv-q-lab">Quantidade</label><input id="mv-q" class="f" type="number" min="0" step="1" required>
-  <div id="mv-entrada">
-    <label class="lab" for="mv-c">Custo por unidade (R$)</label><input id="mv-c" class="f" type="number" min="0" step="0.01">
-    <label style="display:flex;gap:8px;align-items:center;margin:0 0 12px"><input id="mv-g" type="checkbox" checked> Lançar a compra nos gastos (categoria Produtos)</label>
-  </div>
-  <label class="lab" for="mv-o">Observação (opcional)</label><input id="mv-o" class="f" maxlength="200">
-  <p class="err" id="mv-err" role="alert"></p>
-  <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dHist"><h2 id="hs-tit">Histórico</h2>
-  <div id="hs-lista" class="lista-rolagem"></div>
-  <div class="acts" style="margin-top:12px"><button class="btn sec" type="button" data-close>Fechar</button></div>
-</dialog>
-
-<dialog id="dVenda"><h2>Vender produto</h2>
-<form id="fVenda">
-  <div class="itens" data-itens="vd"></div>
-  <div class="so-barbeiros" hidden><label class="lab" for="vd-b">Quem vendeu (para a comissão)</label><select id="vd-b" class="f"></select></div>
-  <label class="lab" for="vd-f">Pagamento</label><select id="vd-f" class="f"></select>
-  <details class="opcional"><summary>Cliente (opcional)</summary>
-    <label class="lab" for="vd-n">Nome</label><input id="vd-n" class="f" autocomplete="off">
-    <label class="lab" for="vd-t">Telefone (com DDD)</label><input id="vd-t" class="f" type="tel" autocomplete="off">
-  </details>
-  <div class="kp"><span class="lab">Total a cobrar</span><span class="num" id="vd-tot">R$ 0,00</span></div>
-  <p class="err" id="vd-err" role="alert"></p>
-  <div class="acts"><button class="btn">Confirmar venda</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dCxMov"><h2 id="cxm-tit">Sangria</h2>
-<form id="fCxMov">
-  <p class="lab" id="cxm-info" style="margin-bottom:12px"></p>
-  <label class="lab" for="cxm-v">Valor (R$)</label><input id="cxm-v" class="f" type="number" min="0.01" step="0.01" required>
-  <label class="lab" for="cxm-d">Motivo (opcional)</label><input id="cxm-d" class="f" maxlength="150">
-  <p class="err" id="cxm-err" role="alert"></p>
-  <div class="acts"><button class="btn">Confirmar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dPlano"><h2 id="pl-tit">Novo plano</h2>
-<form id="fPlano">
-  <label class="lab" for="pl-n">Nome do plano</label><input id="pl-n" class="f" maxlength="80" required placeholder="Ex.: Corte ilimitado">
-  <div class="cols">
-    <div><label class="lab" for="pl-v">Valor por mês (R$)</label><input id="pl-v" class="f" type="number" min="0.01" step="0.01" required></div>
-    <div><label class="lab" for="pl-u">Usos por mês</label><input id="pl-u" class="f" type="number" min="1" max="100" step="1" placeholder="Ilimitado"></div>
-  </div>
-  <p class="lab" style="margin-bottom:6px">Serviços incluídos</p>
-  <div id="pl-servs" class="checks"></div>
-  <label style="display:flex;gap:8px;align-items:center;margin:8px 0 12px"><input id="pl-a" type="checkbox" checked> Plano ativo (aceita novos assinantes)</label>
-  <p class="err" id="pl-err" role="alert"></p>
-  <div class="acts"><button class="btn">Salvar plano</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dAss"><h2>Novo assinante</h2>
-<form id="fAss">
-  <label class="lab" for="as-cli">Cliente cadastrado</label>
-  <select id="as-cli" class="f"><option value="">Novo cliente — preencher abaixo</option></select>
-  <div id="as-novo">
-    <label class="lab" for="as-n">Nome</label><input id="as-n" class="f" autocomplete="off">
-    <label class="lab" for="as-t">Telefone (com DDD)</label><input id="as-t" class="f" type="tel" autocomplete="off">
-  </div>
-  <label class="lab" for="as-p">Plano</label><select id="as-p" class="f" required></select>
-  <label class="lab" for="as-f">Pagamento do primeiro mês</label><select id="as-f" class="f"></select>
-  <p class="lab">O primeiro mês é recebido agora e libera o clube por 1 mês a partir de hoje.</p>
-  <p class="err" id="as-err" role="alert"></p>
-  <div class="acts"><button class="btn">Confirmar assinatura</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dRec"><h2>Receber mensalidade</h2>
-<form id="fRec">
-  <p class="sub" id="rec-info" style="margin-bottom:12px"></p>
-  <label class="lab" for="rec-f">Forma de pagamento</label><select id="rec-f" class="f"></select>
-  <p class="err" id="rec-err" role="alert"></p>
-  <div class="acts"><button class="btn">Confirmar recebimento</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
 </form></dialog>
 
 <dialog id="dCfg"><h2>Configurar barbearia</h2>
@@ -574,8 +241,6 @@
   <label style="display:flex;gap:8px;align-items:center;margin:0 0 12px"><input id="cf-a" type="checkbox"> Trabalho com agendamento de horários</label>
   <div class="cols"><div><label class="lab" for="cf-ab">Abre</label><input id="cf-ab" class="f" type="time"></div>
   <div><label class="lab" for="cf-fe">Fecha</label><input id="cf-fe" class="f" type="time"></div></div>
-  <label style="display:flex;gap:8px;align-items:center;margin:0 0 8px"><input id="cf-fid" type="checkbox"> Programa de fidelidade</label>
-  <div id="cf-fid-box"><label class="lab" for="cf-fid-n">A cada quantos atendimentos pagos o próximo serviço sai grátis?</label><input id="cf-fid-n" class="f" type="number" min="2" max="100" step="1" value="10"></div>
   <p class="err" id="cf-err" role="alert"></p>
   <div class="acts"><button class="btn">Salvar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
 </form></dialog>
@@ -584,71 +249,27 @@
 <div id="tela-admin" hidden>
 <div class="wrap">
 <header>
-  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias · versão 9</p></div>
+  <div><h1>Administração</h1><p class="sub">Acessos e cobrança das barbearias</p></div>
   <div class="acts">
     <button class="btn sm" id="nova" type="button">Nova barbearia</button>
     <button class="btn sec sm" id="a-sair" type="button">Sair</button>
   </div>
 </header>
 
-<section class="card" style="margin-bottom:14px" id="admin-dashboard">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-    <div><h2>Dashboard executivo</h2><p class="sub" id="ad-modelo">Implantação única de R$ 99,90 + plano Pro mensal</p></div>
-    <button class="btn sec sm" id="adm-atualizar" type="button">Atualizar indicadores</button>
-  </div>
-  <div class="grid admin-kpis" style="margin-bottom:18px">
-    <section class="card q"><p class="lab">MRR estimado</p><p class="num admin-num" id="ad-mrr">R$ 0,00</p><p class="lab" id="ad-mrr-txt">Barbearias no Pro</p></section>
-    <section class="card q"><p class="lab">Recebido neste mês</p><p class="num admin-num" id="ad-recebido">R$ 0,00</p><p class="lab" id="ad-pagamentos-qtd">Confirmações registradas</p></section>
-    <section class="card q"><p class="lab">Implantações recebidas no mês</p><p class="num admin-num" id="ad-aquisicao-recebida">R$ 0,00</p><p class="lab">Taxa única de R$ 99,90</p></section>
-    <section class="card q"><p class="lab">Mensalidades recebidas no mês</p><p class="num admin-num" id="ad-mensalidades-recebidas">R$ 0,00</p><p class="lab" id="ad-mens-txt">Plano Pro</p></section>
-    <section class="card q"><p class="lab">Barbearias cadastradas</p><p class="num admin-num" id="ad-total">0</p><p class="lab" id="ad-novas">0 novas neste mês</p></section>
-    <section class="card q"><p class="lab">Inadimplentes</p><p class="num admin-num" id="ad-inadimplentes">0</p><p class="lab">Atrasadas ou em modo restrito</p></section>
-  </div>
-  <div class="grid">
-    <section class="card half">
-      <h2>Evolução de cadastros</h2><p class="lab">Novas barbearias por mês · últimos 6 meses</p>
-      <div class="bars admin-bars" id="ad-crescimento" aria-label="Gráfico de novas barbearias"></div><div class="ticks" id="ad-crescimento-ticks"></div>
-    </section>
-    <section class="card half">
-      <h2>Recebimentos mensais</h2><p class="lab">Pagamentos confirmados · últimos 6 meses</p>
-      <div class="bars admin-bars" id="ad-receitas" aria-label="Gráfico de recebimentos mensais"></div><div class="ticks" id="ad-receitas-ticks"></div>
-    </section>
-    <section class="card half">
-      <h2>Inadimplência para acompanhar</h2><div id="ad-lista-inadimplentes"></div>
-    </section>
-    <section class="card half">
-      <h2>Últimos pagamentos confirmados</h2><div id="ad-ultimos-pagamentos"></div>
-      <p class="lab" style="margin-top:10px">O histórico começa quando esta atualização for instalada; pagamentos antigos não serão reconstruídos automaticamente. Implantação e mensalidade são registradas separadamente.</p>
-    </section>
-  </div>
-</section>
-
-<div class="kpis cinco" style="margin-bottom:14px">
-  <section class="kpi"><p class="lab">Plano Free</p><p class="num" style="font-size:28px" id="m-f">-</p></section>
-  <section class="kpi"><p class="lab">Pro em dia</p><p class="num" style="font-size:28px" id="m-o">-</p></section>
-  <section class="kpi"><p class="lab">Vencem em breve</p><p class="num" style="font-size:28px" id="m-p">-</p></section>
-  <section class="kpi"><p class="lab">Atrasadas</p><p class="num" style="font-size:28px" id="m-a">-</p></section>
-  <section class="kpi"><p class="lab">Modo restrito</p><p class="num" style="font-size:28px" id="m-s">-</p></section>
+<div class="grid" style="margin-bottom:14px">
+  <section class="card q"><p class="lab">Em dia</p><p class="num" style="font-size:28px" id="m-o">-</p></section>
+  <section class="card q"><p class="lab">Vencem em breve</p><p class="num" style="font-size:28px" id="m-p">-</p></section>
+  <section class="card q"><p class="lab">Atrasadas</p><p class="num" style="font-size:28px" id="m-a">-</p></section>
+  <section class="card q"><p class="lab">Modo restrito</p><p class="num" style="font-size:28px" id="m-s">-</p></section>
 </div>
-
-<section class="card" style="margin-bottom:14px" id="card-planos">
-  <div class="titulo-linha"><h2>Planos e recursos</h2><button class="btn sm" type="button" id="planos-salvar">Salvar planos</button></div>
-  <p class="sub" style="margin:-4px 0 14px">Escolha o que cada plano libera. Atendimentos, serviços, gastos e o painel estão sempre liberados. Recursos fora do plano aparecem para a barbearia com o selo "Pro" e um botão para falar com você.</p>
-  <div id="matriz"></div>
-  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:14px">
-    <div><label class="lab" for="preco-pro">Mensalidade do Pro (R$)</label><input id="preco-pro" class="f" type="number" min="0.01" step="0.01"></div>
-    <div><label class="lab" for="wa-vendas">Seu WhatsApp de vendas (aparece no botão "Quero o Pro")</label><input id="wa-vendas" class="f" type="tel" placeholder="(11) 91234-5678"></div>
-  </div>
-  <p class="err" id="planos-err" role="alert"></p>
-</section>
 
 <section class="card" style="margin-bottom:14px">
   <h2>Cobrança</h2>
   <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
     <div><label class="lab" for="pix">Sua chave Pix</label><input id="pix" class="f" placeholder="Vai na mensagem de cobrança"></div>
-    <div><label class="lab" for="val">Mensalidade do Pro (R$)</label><input id="val" class="f" type="number" value="24.90" readonly></div>
+    <div><label class="lab" for="val">Mensalidade (R$)</label><input id="val" class="f" type="number" min="0" step="0.01" value="24.90"></div>
   </div>
-  <p class="lab" id="cob-txt">O plano Free é gratuito e nunca é bloqueado. No Pro, se você não confirmar o pagamento em 7 dias depois do vencimento, a barbearia entra em modo restrito (continua lançando, mas não vê ganhos, gastos nem lucro). Clicar em "Sim" libera na hora.</p>
+  <p class="lab">Regras: 15 dias de teste grátis. Se você não confirmar o pagamento em 7 dias depois do vencimento, a barbearia entra em modo restrito (continua lançando, mas não vê ganhos, gastos nem lucro). Clicar em "Sim" libera na hora.</p>
   <p class="err" id="err" role="alert"></p>
 </section>
 
@@ -663,33 +284,8 @@
   <label class="lab" for="n-n">Nome da barbearia</label><input id="n-n" class="f" required>
   <label class="lab" for="n-t">WhatsApp do dono (com DDD)</label><input id="n-t" class="f" type="tel" placeholder="(11) 91234-5678" required>
   <label class="lab" for="n-e">E-mail do dono (será o login)</label><input id="n-e" class="f" type="email" required>
-  <div class="cols">
-    <div><label class="lab" for="n-p">Plano</label><select id="n-p" class="f"><option value="FREE">Free (grátis)</option><option value="PRO">Pro</option></select></div>
-    <div id="n-dias-box" hidden><label class="lab" for="n-d">Dias de teste grátis</label><input id="n-d" class="f" type="number" min="0" max="90" value="15"></div>
-  </div>
   <p class="err" id="n-err" role="alert"></p>
   <div class="acts"><button class="btn">Criar acesso</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dPreco"><h2>Preço do Pro para esta barbearia</h2>
-<form id="fPreco">
-  <p class="sub" id="pc-info" style="margin-bottom:12px"></p>
-  <div class="benef" style="border-color:var(--line)">
-    <label class="op"><input type="radio" name="pc-tipo" value="PADRAO"><span><b>Preço padrão</b><small>Paga a mensalidade configurada em "Planos e recursos".</small></span></label>
-    <label class="op"><input type="radio" name="pc-tipo" value="DESCONTO"><span><b>Preço com desconto</b><small>Você define quanto ela paga por mês.</small></span></label>
-    <label class="op"><input type="radio" name="pc-tipo" value="CORTESIA"><span><b>Cortesia (grátis)</b><small>Tem o Pro completo, nunca vence e não aparece cobrança para você confirmar.</small></span></label>
-  </div>
-  <div id="pc-v-box" hidden><label class="lab" for="pc-v">Valor por mês (R$)</label><input id="pc-v" class="f" type="number" min="0.01" step="0.01"></div>
-  <p class="err" id="pc-err" role="alert"></p>
-  <div class="acts"><button class="btn">Salvar preço</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
-</form></dialog>
-
-<dialog id="dPlanoB"><h2 id="pb-tit">Mudar plano</h2>
-<form id="fPlanoB">
-  <p class="sub" id="pb-info" style="margin-bottom:12px"></p>
-  <div id="pb-dias-box"><label class="lab" for="pb-d">Dias de teste grátis antes da primeira mensalidade (0 = vence hoje)</label><input id="pb-d" class="f" type="number" min="0" max="90" value="0"></div>
-  <p class="err" id="pb-err" role="alert"></p>
-  <div class="acts"><button class="btn">Confirmar</button><button class="btn sec" type="button" data-close>Cancelar</button></div>
 </form></dialog>
 
 <dialog id="dCred"><h2>Acesso criado</h2>
@@ -708,8 +304,37 @@
   <p class="err" id="ns-err" role="alert"></p>
   <div class="acts"><button class="btn">Salvar senha</button></div>
 </form></dialog>
+<dialog id="dPrivacidade">
+<form method="dialog">
+  <h2>Política de Privacidade</h2>
+  <div class="politica">
+    <p class="sub">Atualizada em novembro de 2026.</p>
+    <h3>Quem somos</h3>
+    <p><span class="pv-nome"></span> é um sistema de gestão para barbearias. Para falar sobre dados pessoais, escreva para <span class="pv-email"></span>.</p>
+    <h3>Quais dados tratamos</h3>
+    <p><strong>Dados da barbearia (o contratante):</strong> e-mail de acesso, nome da barbearia, telefone ou WhatsApp, logotipo e a situação da mensalidade. Usamos para criar o acesso, operar o sistema e fazer a cobrança.</p>
+    <p><strong>Dados que a barbearia cadastra sobre os próprios clientes:</strong> nome, telefone, serviços feitos, horários, valores e formas de pagamento. Quem decide o que registrar, e por quê, é a barbearia. Nós apenas guardamos esses dados e os mostramos só para ela. A barbearia é responsável por avisar os seus clientes e usar os dados somente para atendê-los.</p>
+    <h3>Quem pode ver os dados</h3>
+    <p>Cada barbearia enxerga somente os seus dados. Pelo sistema, a administração vê apenas acesso e cobrança, e não vê clientes, agenda, atendimentos nem gastos. Como mantemos o banco de dados, o responsável técnico tem acesso técnico a ele e não o usa para outros fins.</p>
+    <h3>WhatsApp</h3>
+    <p>Os botões de WhatsApp apenas abrem o aplicativo da própria barbearia com a mensagem pronta. O sistema não envia mensagens sozinho e não repassa telefones a terceiros para publicidade.</p>
+    <h3>Onde os dados ficam</h3>
+    <p>Usamos serviços de nuvem de terceiros: Supabase (banco de dados e login) e Vercel (hospedagem do site). O site também carrega fontes do Google Fonts. Esses serviços podem processar dados em servidores fora do Brasil.</p>
+    <h3>Armazenamento no navegador</h3>
+    <p>Usamos o armazenamento do navegador apenas para manter você conectado e lembrar preferências. Não usamos cookies de publicidade nem rastreamento.</p>
+    <h3>Por quanto tempo guardamos</h3>
+    <p>Enquanto o contrato estiver ativo. A barbearia pode pedir a exclusão dos seus dados a qualquer momento, pelo contato acima.</p>
+    <h3>Seus direitos</h3>
+    <p>Pela Lei Geral de Proteção de Dados (LGPD), você pode pedir acesso, correção, exclusão e portabilidade dos seus dados, entre outros direitos. Se você é cliente de uma barbearia, fale primeiro com ela, que é quem decide o uso dos seus dados.</p>
+    <h3>Segurança</h3>
+    <p>A conexão é protegida (HTTPS), as senhas são guardadas de forma protegida pelo serviço de login e o banco de dados tem regras que impedem uma barbearia de acessar os dados de outra.</p>
+    <h3>Mudanças</h3>
+    <p>Esta política pode mudar. A data da última atualização fica no topo.</p>
+  </div>
+  <div class="acts"><button class="btn">Fechar</button></div>
+</form></dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="script.js?v=9"></script>
+<script src="script.js"></script>
 </body>
 </html>
